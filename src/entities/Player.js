@@ -54,18 +54,26 @@ export default class Player extends Phaser.GameObjects.Sprite {
             this.fire()
             this.lastFired = currentTime
         }
-    }
-      fire() {
+    }    fire() {
         // 在玩家位置上方发射子弹
         console.log(`💥 调用fireBullet - 玩家位置: (${this.x}, ${this.y})`)
         
         if (this.isMultiShotActive()) {
-            // 多重子弹：发射3发子弹
-            this.scene.fireBullet(this.x - 15, this.y - 20) // 左边
-            this.scene.fireBullet(this.x, this.y - 20)      // 中间
-            this.scene.fireBullet(this.x + 15, this.y - 20) // 右边
+            // 散射效果：发射5发子弹，30度角度范围
+            const baseAngle = -90 // 向上射击（-90度）
+            const spreadAngle = 30 // 总散射角度
+            const bulletCount = 5
+            
+            for (let i = 0; i < bulletCount; i++) {
+                // 计算每发子弹的角度偏移
+                const angleOffset = (spreadAngle / (bulletCount - 1)) * i - (spreadAngle / 2)
+                const bulletAngle = baseAngle + angleOffset
+                
+                // 发射有角度的子弹
+                this.scene.fireBullet(this.x, this.y - 20, bulletAngle)
+            }
         } else {
-            // 普通子弹：发射1发
+            // 普通子弹：发射1发，直线向上
             this.scene.fireBullet(this.x, this.y - 20)
         }
     }
@@ -83,19 +91,18 @@ export default class Player extends Phaser.GameObjects.Sprite {
     increaseSpeed() {
         this.speed = Math.min(500, this.speed + 50)
         console.log(`⚡ 移动速度提升！当前速度: ${this.speed}`)
-    }
-      // 多重子弹效果
+    }    // 散射子弹效果
     enableMultiShot() {
         if (!this.multiShot) {
-            // 只有当前没有多重子弹效果时才激活
+            // 只有当前没有散射效果时才激活
             this.multiShot = true
             this.multiShotDuration = 10000 // 10秒持续时间
             this.multiShotStartTime = this.scene.time.now
-            console.log(`🎯 多重子弹激活！持续10秒`)
+            console.log(`🎯 五重散射激活！持续10秒`)
         } else {
-            // 如果已经有多重子弹效果，延长持续时间
+            // 如果已经有散射效果，延长持续时间
             this.multiShotDuration += 5000 // 延长5秒
-            console.log(`🎯 多重子弹效果延长！再延长5秒`)
+            console.log(`🎯 五重散射效果延长！再延长5秒`)
         }
     }
       // 护盾效果
@@ -126,12 +133,11 @@ export default class Player extends Phaser.GameObjects.Sprite {
         console.log(`❤️ 生命恢复！`)
         return 'heal'
     }
-    
-    // 检查多重子弹是否还有效
+      // 检查散射是否还有效
     isMultiShotActive() {
         if (this.multiShot && this.scene.time.now - this.multiShotStartTime > this.multiShotDuration) {
             this.multiShot = false
-            console.log(`🎯 多重子弹效果结束`)
+            console.log(`🎯 五重散射效果结束`)
         }
         return this.multiShot
     }

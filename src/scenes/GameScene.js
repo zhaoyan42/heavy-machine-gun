@@ -435,28 +435,39 @@ export default class GameScene extends Phaser.Scene {
             repeat: -1
         })
     }
-    
-    fireBullet(x, y) {
-        console.log(`🎯 发射子弹 - 位置: (${x}, ${y})`)
+      fireBullet(x, y, angle = -90) {
+        console.log(`🎯 发射子弹 - 位置: (${x}, ${y}), 角度: ${angle}°`)
         
         // 创建子弹
         const bullet = this.add.rectangle(x, y, 4, 12, 0xffff00)
         
+        // 根据角度旋转子弹外观
+        bullet.setRotation(Phaser.Math.DegToRad(angle + 90)) // +90因为默认朝右
+        
         // 添加到子弹组
         this.bullets.add(bullet)
         
-        // 使用补间动画让子弹移动
+        // 计算目标位置（基于角度和距离）
+        const speed = 400 // 子弹速度 pixels/second
+        const distance = 800 // 子弹飞行距离
+        const radian = Phaser.Math.DegToRad(angle)
+        
+        const targetX = x + Math.cos(radian) * distance
+        const targetY = y + Math.sin(radian) * distance
+        
+        // 使用补间动画让子弹按角度移动
         this.tweens.add({
             targets: bullet,
-            y: -50,
-            duration: 2000,
+            x: targetX,
+            y: targetY,
+            duration: (distance / speed) * 1000,
             ease: 'Linear',
             onComplete: () => {
                 bullet.destroy()
             }
         })
         
-        console.log(`🔫 子弹已创建，当前子弹数量: ${this.bullets.children.size}`)
+        console.log(`🔫 子弹已创建，角度: ${angle}°，当前子弹数量: ${this.bullets.children.size}`)
     }
     
     addScore(points) {
@@ -516,11 +527,11 @@ export default class GameScene extends Phaser.Scene {
                 console.log('💰 获得道具：额外分数奖励！')
                 break
             case 4:
-                // 多重子弹
+                // 散射子弹
                 if (this.player && this.player.enableMultiShot) {
                     this.player.enableMultiShot()
-                    effectText = '🎯三重射击'
-                    console.log('🎯 获得道具：多重子弹！')
+                    effectText = '🎯五重散射'
+                    console.log('🎯 获得道具：五重散射！')
                 }
                 break
             case 5:
@@ -739,10 +750,9 @@ export default class GameScene extends Phaser.Scene {
         if (!this.player || !this.effectsText) return
         
         let effects = []
-        
-        if (this.player.isMultiShotActive()) {
+          if (this.player.isMultiShotActive()) {
             const remaining = Math.ceil((this.player.multiShotDuration - (this.time.now - this.player.multiShotStartTime)) / 1000)
-            effects.push(`🎯三重射击 ${remaining}s`)
+            effects.push(`🎯五重散射 ${remaining}s`)
         }
         
         if (this.player.isShieldActive()) {
