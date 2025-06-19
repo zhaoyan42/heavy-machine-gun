@@ -1,25 +1,17 @@
 import Phaser from 'phaser'
 
-export default class Player extends Phaser.Physics.Arcade.Sprite {
+export default class Player extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'player')
         
-        // 添加到场景和物理系统
+        // 添加到场景（不使用物理系统）
         scene.add.existing(this)
-        scene.physics.add.existing(this)
-        
-        // 设置物理属性
-        this.setCollideWorldBounds(true)
-        this.setDrag(800) // 添加阻力，让移动更平滑
         
         // 玩家属性
         this.speed = 300
         this.targetX = x
         this.fireRate = 200 // 射击间隔（毫秒）
         this.lastFired = 0
-        
-        // 设置碰撞体积
-        this.setSize(32, 32)
         
         console.log('👤 玩家创建成功')
     }
@@ -33,24 +25,24 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // 自动射击
         this.handleShooting(currentTime)
     }
-    
-    handleMovement() {
+      handleMovement() {
         // 键盘控制
         if (this.scene.cursors.left.isDown) {
-            this.setVelocityX(-this.speed)
+            this.x -= this.speed * (1/60) // 基于帧率的移动
         } else if (this.scene.cursors.right.isDown) {
-            this.setVelocityX(this.speed)
+            this.x += this.speed * (1/60)
         } else {
             // 鼠标/触屏控制 - 平滑移动到目标位置
             const distance = this.targetX - this.x
             
             if (Math.abs(distance) > 5) {
                 const direction = distance > 0 ? 1 : -1
-                this.setVelocityX(direction * this.speed)
-            } else {
-                this.setVelocityX(0)
+                this.x += direction * this.speed * (1/60)
             }
         }
+        
+        // 限制在屏幕范围内
+        this.x = Phaser.Math.Clamp(this.x, 20, this.scene.cameras.main.width - 20)
     }
       handleShooting(currentTime) {
         // 自动射击

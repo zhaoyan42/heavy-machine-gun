@@ -179,12 +179,13 @@ export default class GameScene extends Phaser.Scene {
                         powerUp.rotateTween.stop()
                         powerUp.rotateTween = null
                     }
+                      // 获取道具效果文本
+                    const effectText = this.collectPowerUp()
                     
-                    // 创建收集效果
-                    this.createCollectEffect(powerUp.x, powerUp.y)
+                    // 创建收集效果，传入效果文本
+                    this.createCollectEffect(powerUp.x, powerUp.y, effectText)
                     
                     powerUp.destroy()
-                    this.collectPowerUp()
                     console.log('✨ 收集道具成功！')
                 }
             })
@@ -451,16 +452,40 @@ export default class GameScene extends Phaser.Scene {
         if (this.lives <= 0) {
             this.gameOver()
         }
-    }
-    
-    collectPowerUp() {
-        // 简单的加分效果
+    }    collectPowerUp() {
+        // 加分效果
         this.addScore(50)
         
-        // 可以在这里添加其他道具效果，比如：
-        // - 增加射击速度
-        // - 多重子弹
-        // - 护盾等
+        // 随机选择道具效果
+        const powerUpType = Phaser.Math.Between(1, 3)
+        let effectText = '+50'
+        
+        switch (powerUpType) {
+            case 1:
+                // 增加射击速度
+                if (this.player && this.player.increaseFireRate) {
+                    this.player.increaseFireRate()
+                    effectText = '🔥射速+'
+                    console.log('🔥 获得道具：射击速度提升！')
+                }
+                break
+            case 2:
+                // 增加移动速度
+                if (this.player && this.player.increaseSpeed) {
+                    this.player.increaseSpeed()
+                    effectText = '⚡速度+'
+                    console.log('⚡ 获得道具：移动速度提升！')
+                }
+                break
+            case 3:
+                // 额外加分
+                this.addScore(100)
+                effectText = '+150'
+                console.log('💰 获得道具：额外分数奖励！')
+                break
+        }
+        
+        return effectText // 返回效果文本用于显示
     }
     
     increaseDifficulty() {
@@ -555,8 +580,7 @@ export default class GameScene extends Phaser.Scene {
             })
         })
     }
-    
-    createCollectEffect(x, y) {
+      createCollectEffect(x, y, effectText = '+50') {
         // 创建收集时的光环效果
         const ring = this.add.circle(x, y, 15, 0x00ff00)
         ring.setStrokeStyle(3, 0xffff00)
@@ -574,8 +598,8 @@ export default class GameScene extends Phaser.Scene {
             }
         })
         
-        // 创建向上飘动的文本
-        const bonusText = this.add.text(x, y, '+50', {
+        // 创建向上飘动的文本，显示实际效果
+        const bonusText = this.add.text(x, y, effectText, {
             fontSize: '20px',
             fill: '#00ff00',
             stroke: '#000000',
