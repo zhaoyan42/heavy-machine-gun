@@ -8,11 +8,11 @@ import GameUtils from '../utils/GameUtils.js'
 export default class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' })
-        
-        // 游戏状态
+          // 游戏状态
         this.score = 0
         this.lives = 3
         this.level = 1
+        this.enemiesKilled = 0 // 击败敌人计数
         
         // 游戏对象组
         this.player = null
@@ -46,11 +46,11 @@ export default class GameScene extends Phaser.Scene {
     
     create() {
         console.log('🎮 创建游戏场景...')
-        
-        // 重置游戏状态（重要：scene.restart()不会重新调用构造函数）
+          // 重置游戏状态（重要：scene.restart()不会重新调用构造函数）
         this.score = 0
         this.lives = 3
         this.level = 1
+        this.enemiesKilled = 0 // 击败敌人计数
         
         // 重置调试计数器
         this.debugFrameCount = 0
@@ -129,8 +129,7 @@ export default class GameScene extends Phaser.Scene {
                             enemy.clearTint()
                         }
                     })
-                    
-                    // 检查敌人是否死亡
+                      // 检查敌人是否死亡
                     if (enemy.currentHp <= 0) {
                         // 停止敌人的动画
                         if (enemy.moveTween) {
@@ -152,12 +151,19 @@ export default class GameScene extends Phaser.Scene {
                         
                         // 获得分数
                         this.addScore(enemy.scoreValue)
+                        this.enemiesKilled++
                         
                         // 创建死亡效果
                         this.createDeathEffect(enemy.x, enemy.y, enemy.enemyType)
                         
+                        // Boss或强力敌人有概率掉落道具
+                        if ((enemy.enemyType === 'boss' && Phaser.Math.Between(1, 100) <= 60) ||
+                            (enemy.enemyType === 'strong' && Phaser.Math.Between(1, 100) <= 25)) {
+                            this.dropPowerUp(enemy.x, enemy.y)
+                        }
+                        
                         enemy.destroy()
-                        console.log(`👾 ${enemy.enemyType}敌人被击败！获得${enemy.scoreValue}分`)
+                        console.log(`👾 ${enemy.enemyType}敌人被击败！获得${enemy.scoreValue}分 (总击败：${this.enemiesKilled})`)
                     }
                 }
             })
@@ -468,14 +474,20 @@ export default class GameScene extends Phaser.Scene {
             fontFamily: 'Arial'
         })
     }
-    
-    startEnemySpawning() {
+      startEnemySpawning() {
         this.enemySpawnTimer = this.time.addEvent({
-            delay: 2000, // 每2秒生成一个敌人
+            delay: this.getEnemySpawnDelay(), // 动态计算生成间隔
             callback: this.spawnEnemy,
             callbackScope: this,
             loop: true
         })
+    }
+    
+    getEnemySpawnDelay() {
+        // 根据等级动态调整敌人生成间隔
+        const baseDelay = 2000 // 基础2秒
+        const reduction = Math.min(this.level * 50, 800) // 每级减少50ms，最多减少800ms
+        return Math.max(baseDelay - reduction, 400) // 最快400ms生成一次
     }
     
     startPowerUpSpawning() {
@@ -485,36 +497,56 @@ export default class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         })
-    }
-      spawnEnemy() {
-        // 根据等级决定敌人类型和数量
-        const enemyCount = this.getEnemyCountForLevel()
-        const enemyTypes = this.getEnemyTypesForLevel()
+    }      spawnEnemy() {
+        // 10%概率触发敌人潮（同时生成多批敌人）
+        const isEnemyWave = Phaser.Math.Between(1, 100) <= 10 && this.level >= 5
+        const waveCount = isEnemyWave ? Phaser.Math.Between(2, 3) : 1
         
-        for (let i = 0; i < enemyCount; i++) {
-            // 延迟生成，避免所有敌人同时出现
-            this.time.delayedCall(i * 200, () => {
-                this.createSingleEnemy(enemyTypes)
-            })
+        if (isEnemyWave) {
+            console.log(`🌊 敌人潮来袭！生成${waveCount}批敌人`)
+        }
+        
+        for (let wave = 0; wave < waveCount; wave++) {
+            // 根据等级决定敌人类型和数量
+            const enemyCount = this.getEnemyCountForLevel()
+            const enemyTypes = this.getEnemyTypesForLevel()
+            
+            for (let i = 0; i < enemyCount; i++) {
+                // 延迟生成，避免所有敌人同时出现
+                const delay = wave * 600 + i * 200 // 敌人潮之间间隔更大
+                this.time.delayedCall(delay, () => {
+                    this.createSingleEnemy(enemyTypes)
+                })
+            }
         }
     }
-    
-    getEnemyCountForLevel() {
+      getEnemyCountForLevel() {
         // 根据等级增加敌人数量
         if (this.level <= 2) return 1
         if (this.level <= 5) return 2
         if (this.level <= 8) return 3
         if (this.level <= 12) return 4
-        return 5 // 最高等级每次生成5个敌人
+        if (this.level <= 18) return 5
+        if (this.level <= 25) return 6
+        return 7 // 超高等级每次生成7个敌人
     }
-    
-    getEnemyTypesForLevel() {
+      getEnemyTypesForLevel() {
         // 根据等级解锁不同类型的敌人
         const types = ['basic']
         
         if (this.level >= 3) types.push('fast')     // 3级解锁快速敌人
         if (this.level >= 6) types.push('strong')   // 6级解锁强力敌人
-        if (this.level >= 10) types.push('boss')    // 10级解锁小Boss
+        if (this.level >= 10) {
+            types.push('boss')    // 10级解锁小Boss
+            
+            // 高等级时增加Boss出现概率
+            if (this.level >= 15) {
+                types.push('boss') // 15级后Boss出现概率翻倍
+            }
+            if (this.level >= 20) {
+                types.push('boss', 'boss') // 20级后Boss出现概率更高
+            }
+        }
         
         return types
     }
@@ -748,13 +780,21 @@ export default class GameScene extends Phaser.Scene {
             }
         })
     }
-    
-    spawnPowerUp() {
+      spawnPowerUp() {
         const x = Phaser.Math.Between(50, this.cameras.main.width - 50)
         console.log(`✨ 生成道具 - 位置: (${x}, -50)`)
         
+        this.createPowerUpSprite(x, -50)
+    }
+    
+    dropPowerUp(x, y) {
+        console.log(`💎 敌人掉落道具 - 位置: (${x}, ${y})`)
+        this.createPowerUpSprite(x, y)
+    }
+    
+    createPowerUpSprite(x, y) {
         // 创建道具精灵
-        const powerUp = this.add.sprite(x, -50, 'powerup')
+        const powerUp = this.add.sprite(x, y, 'powerup')
         powerUp.setTint(0xff00ff) // 紫色
         
         // 添加到道具组
@@ -762,7 +802,7 @@ export default class GameScene extends Phaser.Scene {
         
         // 使用补间动画让道具向下移动
         const speed = 80
-        const duration = (this.cameras.main.height + 100) / speed * 1000
+        const duration = (this.cameras.main.height + 100 - y) / speed * 1000
         
         // 保存动画引用
         powerUp.moveTween = this.tweens.add({
@@ -929,15 +969,24 @@ export default class GameScene extends Phaser.Scene {
         
         return effectText // 返回效果文本用于显示
     }
-    
-    increaseDifficulty() {
-        // 使用工具类计算新的敌人生成间隔
-        const newDelay = GameUtils.getEnemySpawnDelay(this.level)
+      increaseDifficulty() {
+        // 更新敌人生成间隔
+        const newDelay = this.getEnemySpawnDelay()
         if (this.enemySpawnTimer) {
             this.enemySpawnTimer.delay = newDelay
         }
         
         console.log(`📈 难度提升！等级: ${this.level}, 敌人生成间隔: ${newDelay}ms`)
+        
+        // 升级时的额外效果提示
+        let levelBonus = ''
+        if (this.level === 3) levelBonus = ' - 解锁快速敌人！'
+        if (this.level === 6) levelBonus = ' - 解锁强力敌人！'
+        if (this.level === 10) levelBonus = ' - 解锁Boss敌人！'
+        
+        if (levelBonus) {
+            console.log(`🎉 等级${this.level}${levelBonus}`)
+        }
     }
     
     gameOver() {
