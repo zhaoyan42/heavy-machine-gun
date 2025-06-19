@@ -106,35 +106,62 @@ export default class GameScene extends Phaser.Scene {
         // 手动碰撞检测
         this.checkCollisions()
     }
-    
-    checkCollisions() {
+      checkCollisions() {
         // 子弹击中敌人
         this.bullets.children.entries.forEach(bullet => {
             this.enemies.children.entries.forEach(enemy => {
                 const distance = this.getDistance(bullet, enemy)
                 
                 if (distance < 30) {
-                    // 停止敌人的动画，防止继续到底部
-                    if (enemy.moveTween) {
-                        enemy.moveTween.stop()
-                        enemy.moveTween = null
-                    }
-                    if (enemy.rotateTween) {
-                        enemy.rotateTween.stop()
-                        enemy.rotateTween = null
-                    }
-                    
                     bullet.destroy()
-                    enemy.destroy()
-                    this.addScore(10)
-                    console.log('💥 子弹击中敌人！')
+                    
+                    // 敌人受到伤害
+                    enemy.currentHp--
+                    console.log(`💥 子弹击中敌人！剩余血量: ${enemy.currentHp}/${enemy.maxHp}`)
                     
                     // 创建击中效果
                     this.createHitEffect(enemy.x, enemy.y)
+                      // 受伤闪烁效果
+                    enemy.setTint(0xffffff)
+                    this.time.delayedCall(100, () => {
+                        if (enemy && enemy.active) {
+                            // 清除tint恢复原本颜色
+                            enemy.clearTint()
+                        }
+                    })
+                    
+                    // 检查敌人是否死亡
+                    if (enemy.currentHp <= 0) {
+                        // 停止敌人的动画
+                        if (enemy.moveTween) {
+                            enemy.moveTween.stop()
+                            enemy.moveTween = null
+                        }
+                        if (enemy.rotateTween) {
+                            enemy.rotateTween.stop()
+                            enemy.rotateTween = null
+                        }
+                        
+                        // 销毁血量条
+                        if (enemy.hpBarBg) {
+                            enemy.hpBarBg.destroy()
+                        }
+                        if (enemy.hpBar) {
+                            enemy.hpBar.destroy()
+                        }
+                        
+                        // 获得分数
+                        this.addScore(enemy.scoreValue)
+                        
+                        // 创建死亡效果
+                        this.createDeathEffect(enemy.x, enemy.y, enemy.enemyType)
+                        
+                        enemy.destroy()
+                        console.log(`👾 ${enemy.enemyType}敌人被击败！获得${enemy.scoreValue}分`)
+                    }
                 }
             })
-        })
-          // 玩家碰到敌人
+        })                // 玩家碰到敌人
         if (this.player) {
             this.enemies.children.entries.forEach(enemy => {
                 if (this.checkDistance(this.player, enemy, 35)) {
@@ -150,8 +177,16 @@ export default class GameScene extends Phaser.Scene {
                             enemy.rotateTween = null
                         }
                         
+                        // 销毁血量条
+                        if (enemy.hpBarBg) {
+                            enemy.hpBarBg.destroy()
+                        }
+                        if (enemy.hpBar) {
+                            enemy.hpBar.destroy()
+                        }
+                        
                         enemy.destroy()
-                        this.addScore(10) // 护盾反击得分
+                        this.addScore(enemy.scoreValue || 10) // 护盾反击得分
                         console.log('🛡️ 护盾抵挡攻击！')
                         
                         // 护盾闪光效果
@@ -170,6 +205,14 @@ export default class GameScene extends Phaser.Scene {
                         if (enemy.rotateTween) {
                             enemy.rotateTween.stop() 
                             enemy.rotateTween = null
+                        }
+                        
+                        // 销毁血量条
+                        if (enemy.hpBarBg) {
+                            enemy.hpBarBg.destroy()
+                        }
+                        if (enemy.hpBar) {
+                            enemy.hpBar.destroy()
                         }
                         
                         enemy.destroy()
@@ -230,8 +273,7 @@ export default class GameScene extends Phaser.Scene {
         const dy = obj1.y - obj2.y
         return Math.sqrt(dx * dx + dy * dy)
     }
-    
-    createHitEffect(x, y) {
+      createHitEffect(x, y) {
         // 创建击中闪光效果
         const flash = this.add.circle(x, y, 20, 0xffffff)
         
@@ -246,7 +288,57 @@ export default class GameScene extends Phaser.Scene {
             }
         })
     }
-      createColorGraphics() {
+    
+    createDeathEffect(x, y, enemyType) {
+        // 根据敌人类型创建不同的死亡效果
+        let color = 0xff4444
+        let particles = 8
+        let duration = 500
+        
+        switch (enemyType) {
+            case 'fast':
+                color = 0xff8800
+                particles = 6
+                duration = 300
+                break
+            case 'strong':
+                color = 0x8800ff
+                particles = 12
+                duration = 700
+                break
+            case 'boss':
+                color = 0x000088
+                particles = 16
+                duration = 1000
+                break
+        }
+        
+        // 创建粒子爆炸效果
+        for (let i = 0; i < particles; i++) {
+            const angle = (Math.PI * 2 / particles) * i
+            const distance = Phaser.Math.Between(20, 40)
+            
+            const particle = this.add.circle(x, y, 3, color)
+            
+            this.tweens.add({
+                targets: particle,
+                x: x + Math.cos(angle) * distance,
+                y: y + Math.sin(angle) * distance,
+                alpha: 0,
+                scale: 0.1,
+                duration: duration,
+                ease: 'Power2',
+                onComplete: () => {
+                    particle.destroy()
+                }
+            })
+        }
+        
+        // Boss死亡时的额外震屏效果
+        if (enemyType === 'boss') {
+            GameUtils.screenShake(this, 8, 400)
+        }
+    }      createColorGraphics() {
         // 创建玩家图形（绿色矩形）
         const playerGraphics = this.add.graphics()
             .fillStyle(0x00ff00)
@@ -261,12 +353,60 @@ export default class GameScene extends Phaser.Scene {
         bulletGraphics.generateTexture('bullet', 4, 12)
         bulletGraphics.destroy() // 销毁图形对象
         
-        // 创建敌人图形（红色矩形）
+        // 创建基础敌人图形（红色矩形）
         const enemyGraphics = this.add.graphics()
             .fillStyle(0xff0000)
             .fillRect(0, 0, 35, 35)
         enemyGraphics.generateTexture('enemy', 35, 35)
         enemyGraphics.destroy() // 销毁图形对象
+        
+        // 创建快速敌人图形（橙色三角形）
+        const fastEnemyGraphics = this.add.graphics()
+            .fillStyle(0xff8800)
+            .fillTriangle(15, 5, 5, 25, 25, 25)
+        fastEnemyGraphics.generateTexture('enemy_fast', 30, 30)
+        fastEnemyGraphics.destroy()
+        
+        // 创建强力敌人图形（紫色八边形）
+        const strongEnemyGraphics = this.add.graphics()
+            .fillStyle(0x8800ff)
+        // 绘制八边形
+        strongEnemyGraphics.beginPath()
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2
+            const x = 20 + Math.cos(angle) * 15
+            const y = 20 + Math.sin(angle) * 15
+            if (i === 0) {
+                strongEnemyGraphics.moveTo(x, y)
+            } else {
+                strongEnemyGraphics.lineTo(x, y)
+            }
+        }
+        strongEnemyGraphics.closePath()
+        strongEnemyGraphics.fillPath()
+        strongEnemyGraphics.generateTexture('enemy_strong', 40, 40)
+        strongEnemyGraphics.destroy()
+        
+        // 创建Boss敌人图形（深蓝色星形）
+        const bossEnemyGraphics = this.add.graphics()
+            .fillStyle(0x000088)
+        // 绘制星形
+        bossEnemyGraphics.beginPath()
+        for (let i = 0; i < 10; i++) {
+            const angle = (i / 10) * Math.PI * 2
+            const radius = i % 2 === 0 ? 25 : 12
+            const x = 30 + Math.cos(angle - Math.PI / 2) * radius
+            const y = 30 + Math.sin(angle - Math.PI / 2) * radius
+            if (i === 0) {
+                bossEnemyGraphics.moveTo(x, y)
+            } else {
+                bossEnemyGraphics.lineTo(x, y)
+            }
+        }
+        bossEnemyGraphics.closePath()
+        bossEnemyGraphics.fillPath()
+        bossEnemyGraphics.generateTexture('enemy_boss', 60, 60)
+        bossEnemyGraphics.destroy()
         
         // 创建道具图形（紫色圆形）
         const powerupGraphics = this.add.graphics()
@@ -346,43 +486,266 @@ export default class GameScene extends Phaser.Scene {
             loop: true
         })
     }
+      spawnEnemy() {
+        // 根据等级决定敌人类型和数量
+        const enemyCount = this.getEnemyCountForLevel()
+        const enemyTypes = this.getEnemyTypesForLevel()
+        
+        for (let i = 0; i < enemyCount; i++) {
+            // 延迟生成，避免所有敌人同时出现
+            this.time.delayedCall(i * 200, () => {
+                this.createSingleEnemy(enemyTypes)
+            })
+        }
+    }
     
-    spawnEnemy() {
+    getEnemyCountForLevel() {
+        // 根据等级增加敌人数量
+        if (this.level <= 2) return 1
+        if (this.level <= 5) return 2
+        if (this.level <= 8) return 3
+        if (this.level <= 12) return 4
+        return 5 // 最高等级每次生成5个敌人
+    }
+    
+    getEnemyTypesForLevel() {
+        // 根据等级解锁不同类型的敌人
+        const types = ['basic']
+        
+        if (this.level >= 3) types.push('fast')     // 3级解锁快速敌人
+        if (this.level >= 6) types.push('strong')   // 6级解锁强力敌人
+        if (this.level >= 10) types.push('boss')    // 10级解锁小Boss
+        
+        return types
+    }
+      createSingleEnemy(availableTypes) {
         const x = Phaser.Math.Between(50, this.cameras.main.width - 50)
-        console.log(`👾 生成敌人 - 位置: (${x}, -50)`)
+        const enemyType = Phaser.Utils.Array.GetRandom(availableTypes)
+        
+        console.log(`👾 生成${enemyType}敌人 - 位置: (${x}, -50), 等级: ${this.level}`)
+        
+        // 根据类型选择纹理
+        let texture = 'enemy'
+        switch (enemyType) {
+            case 'fast':
+                texture = 'enemy_fast'
+                break
+            case 'strong':
+                texture = 'enemy_strong'
+                break
+            case 'boss':
+                texture = 'enemy_boss'
+                break
+        }
         
         // 创建敌人精灵
-        const enemy = this.add.sprite(x, -50, 'enemy')
-        enemy.setTint(0xff0000) // 红色
+        const enemy = this.add.sprite(x, -50, texture)
+        
+        // 根据类型设置敌人属性
+        this.setupEnemyByType(enemy, enemyType)
         
         // 添加到敌人组
         this.enemies.add(enemy)
         
-        // 使用补间动画让敌人向下移动
-        const speed = Phaser.Math.Between(100, 200)
-        const duration = (this.cameras.main.height + 100) / speed * 1000
+        // 设置移动动画
+        this.setupEnemyMovement(enemy, enemyType)
+    }
+      setupEnemyByType(enemy, type) {
+        // 设置敌人的基础属性
+        enemy.enemyType = type
+        enemy.maxHp = 1
+        enemy.currentHp = 1
+        enemy.scoreValue = 10
         
-        // 保存动画引用到敌人对象上
+        switch (type) {
+            case 'basic':
+                enemy.setScale(1.0)
+                break
+                
+            case 'fast':
+                enemy.setScale(0.9)
+                enemy.scoreValue = 15
+                break
+                
+            case 'strong':
+                enemy.setScale(1.1)
+                enemy.maxHp = 2
+                enemy.currentHp = 2
+                enemy.scoreValue = 25
+                break
+                
+            case 'boss':
+                enemy.setScale(1.0) // boss纹理本身已经较大
+                enemy.maxHp = 3
+                enemy.currentHp = 3
+                enemy.scoreValue = 50
+                break
+        }
+        
+        // 显示血量条（如果HP > 1）
+        if (enemy.maxHp > 1) {
+            this.createEnemyHealthBar(enemy)
+        }
+    }
+    
+    setupEnemyMovement(enemy, type) {
+        let speed, pattern
+        
+        switch (type) {
+            case 'basic':
+                speed = Phaser.Math.Between(80, 120)
+                pattern = 'straight'
+                break
+                
+            case 'fast':
+                speed = Phaser.Math.Between(150, 220)
+                pattern = 'straight'
+                break
+                
+            case 'strong':
+                speed = Phaser.Math.Between(60, 100)
+                pattern = 'zigzag'
+                break
+                
+            case 'boss':
+                speed = Phaser.Math.Between(40, 80)
+                pattern = 'circle'
+                break
+        }
+        
+        const duration = (this.cameras.main.height + 100) / speed * 1000
+          if (pattern === 'straight') {
+            // 直线移动
+            enemy.moveTween = this.tweens.add({
+                targets: enemy,
+                y: this.cameras.main.height + 50,
+                duration: duration,
+                ease: 'Linear',
+                onComplete: () => {
+                    if (enemy && enemy.active) {
+                        // 销毁血量条
+                        if (enemy.hpBarBg) {
+                            enemy.hpBarBg.destroy()
+                        }
+                        if (enemy.hpBar) {
+                            enemy.hpBar.destroy()
+                        }
+                        
+                        enemy.destroy()
+                        this.loseLife()
+                        console.log(`👾 ${type}敌人到达底部，失去生命`)
+                    }
+                }
+            })
+        } else if (pattern === 'zigzag') {
+            // Z字形移动
+            this.createZigzagMovement(enemy, duration)
+        } else if (pattern === 'circle') {
+            // 圆形移动
+            this.createCircleMovement(enemy, duration)
+        }
+        
+        // 旋转效果
+        const rotationSpeed = type === 'fast' ? Math.PI * 6 : Math.PI * 3
+        enemy.rotateTween = this.tweens.add({
+            targets: enemy,
+            rotation: rotationSpeed,
+            duration: duration,
+            ease: 'Linear'
+        })
+    }
+    
+    createEnemyHealthBar(enemy) {
+        // 创建血量条背景
+        const hpBarBg = this.add.rectangle(enemy.x, enemy.y - 25, 30, 4, 0x666666)
+        // 创建血量条
+        const hpBar = this.add.rectangle(enemy.x, enemy.y - 25, 30, 4, 0x00ff00)
+        
+        enemy.hpBarBg = hpBarBg
+        enemy.hpBar = hpBar
+        
+        // 血量条跟随敌人移动
+        enemy.moveTween.on('update', () => {
+            if (hpBarBg && hpBarBg.active) {
+                hpBarBg.x = enemy.x
+                hpBarBg.y = enemy.y - 25
+            }
+            if (hpBar && hpBar.active) {
+                hpBar.x = enemy.x
+                hpBar.y = enemy.y - 25
+                // 更新血量条宽度
+                const hpPercent = enemy.currentHp / enemy.maxHp
+                hpBar.width = 30 * hpPercent
+                // 根据血量改变颜色
+                if (hpPercent > 0.6) {
+                    hpBar.setFillStyle(0x00ff00) // 绿色
+                } else if (hpPercent > 0.3) {
+                    hpBar.setFillStyle(0xffff00) // 黄色
+                } else {
+                    hpBar.setFillStyle(0xff0000) // 红色
+                }
+            }
+        })
+    }
+      createZigzagMovement(enemy, duration) {
+        const startX = enemy.x
+        const zigzagDistance = 60
+        
+        enemy.moveTween = this.tweens.chain({
+            targets: enemy,
+            tweens: [
+                { x: startX + zigzagDistance, y: enemy.y + 100, duration: duration * 0.25 },
+                { x: startX - zigzagDistance, y: enemy.y + 200, duration: duration * 0.25 },
+                { x: startX + zigzagDistance, y: enemy.y + 300, duration: duration * 0.25 },
+                { x: startX, y: this.cameras.main.height + 50, duration: duration * 0.25 }
+            ],
+            onComplete: () => {
+                if (enemy && enemy.active) {
+                    // 销毁血量条
+                    if (enemy.hpBarBg) {
+                        enemy.hpBarBg.destroy()
+                    }
+                    if (enemy.hpBar) {
+                        enemy.hpBar.destroy()
+                    }
+                    
+                    enemy.destroy()
+                    this.loseLife()
+                    console.log('👾 强力敌人到达底部，失去生命')
+                }
+            }
+        })
+    }
+      createCircleMovement(enemy, duration) {
+        const centerX = enemy.x
+        const radius = 40
+        
         enemy.moveTween = this.tweens.add({
             targets: enemy,
             y: this.cameras.main.height + 50,
             duration: duration,
             ease: 'Linear',
+            onUpdate: () => {
+                // 圆形移动效果
+                const progress = enemy.moveTween.progress
+                const angle = progress * Math.PI * 4 // 4圈
+                enemy.x = centerX + Math.sin(angle) * radius
+            },
             onComplete: () => {
                 if (enemy && enemy.active) {
+                    // 销毁血量条
+                    if (enemy.hpBarBg) {
+                        enemy.hpBarBg.destroy()
+                    }
+                    if (enemy.hpBar) {
+                        enemy.hpBar.destroy()
+                    }
+                    
                     enemy.destroy()
                     this.loseLife()
-                    console.log('👾 敌人到达底部，失去生命')
+                    console.log('👾 Boss敌人到达底部，失去生命')
                 }
             }
-        })
-        
-        // 添加旋转效果
-        enemy.rotateTween = this.tweens.add({
-            targets: enemy,
-            rotation: Math.PI * 4,
-            duration: duration,
-            ease: 'Linear'
         })
     }
     
@@ -697,10 +1060,10 @@ export default class GameScene extends Phaser.Scene {
             }
         })
     }
-    
-    clearAllEnemies() {
+      clearAllEnemies() {
         // 炸弹效果：清除所有敌人并给予分数奖励
         let enemiesCleared = 0
+        let totalScore = 0
         
         this.enemies.children.entries.forEach(enemy => {
             if (enemy && enemy.active) {
@@ -714,19 +1077,33 @@ export default class GameScene extends Phaser.Scene {
                     enemy.rotateTween = null
                 }
                 
+                // 销毁血量条
+                if (enemy.hpBarBg) {
+                    enemy.hpBarBg.destroy()
+                }
+                if (enemy.hpBar) {
+                    enemy.hpBar.destroy()
+                }
+                
                 // 创建爆炸效果
                 this.createBombEffect(enemy.x, enemy.y)
+                
+                // 根据敌人类型计算分数
+                const baseScore = enemy.scoreValue || 10
+                totalScore += baseScore
                 
                 enemy.destroy()
                 enemiesCleared++
             }
         })
         
-        // 根据清除的敌人数量给予分数
-        const bonusScore = enemiesCleared * 20
-        if (bonusScore > 0) {
-            this.addScore(bonusScore)
-            console.log(`💣 炸弹清除了 ${enemiesCleared} 个敌人，获得 ${bonusScore} 分！`)
+        // 给予分数奖励
+        if (totalScore > 0) {
+            this.addScore(totalScore)
+            console.log(`💣 炸弹清除了 ${enemiesCleared} 个敌人，获得 ${totalScore} 分！`)
+            
+            // 屏幕震动效果
+            GameUtils.screenShake(this, 6, 300)
         }
     }
     
