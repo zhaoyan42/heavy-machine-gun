@@ -488,12 +488,11 @@ export default class GameScene extends Phaser.Scene {
             loop: true
         })
     }
-    
-    getEnemySpawnDelay() {
-        // 根据等级动态调整敌人生成间隔
-        const baseDelay = 2000 // 基础2秒
-        const reduction = Math.min(this.level * 50, 800) // 每级减少50ms，最多减少800ms
-        return Math.max(baseDelay - reduction, 400) // 最快400ms生成一次
+      getEnemySpawnDelay() {
+        // 更陡峭的难度曲线，敌人生成速度急剧增加
+        const baseDelay = 1800 // 基础1.8秒
+        const reduction = Math.min(this.level * 80, 1500) // 每级减少80ms，最多减少1500ms
+        return Math.max(baseDelay - reduction, 150) // 最快150ms生成一次
     }
     
     startPowerUpSpawning() {
@@ -504,53 +503,73 @@ export default class GameScene extends Phaser.Scene {
             loop: true
         })
     }      spawnEnemy() {
-        // 10%概率触发敌人潮（同时生成多批敌人）
-        const isEnemyWave = Phaser.Math.Between(1, 100) <= 10 && this.level >= 5
-        const waveCount = isEnemyWave ? Phaser.Math.Between(2, 3) : 1
+        // 大幅增加敌人潮概率和强度
+        let waveChance = 0
+        let waveCount = 1
         
-        if (isEnemyWave) {
-            console.log(`🌊 敌人潮来袭！生成${waveCount}批敌人`)
+        if (this.level >= 3) {
+            waveChance = 15 + (this.level - 3) * 3 // 3级开始15%，每级增加3%
+            waveCount = Math.min(2 + Math.floor(this.level / 4), 6) // 最多6波
         }
         
-        for (let wave = 0; wave < waveCount; wave++) {
+        const isEnemyWave = Phaser.Math.Between(1, 100) <= waveChance
+        
+        if (isEnemyWave) {
+            console.log(`🌊 敌人潮来袭！生成${waveCount}批敌人 (概率: ${waveChance}%)`)
+        }
+        
+        const actualWaves = isEnemyWave ? waveCount : 1
+        
+        for (let wave = 0; wave < actualWaves; wave++) {
             // 根据等级决定敌人类型和数量
             const enemyCount = this.getEnemyCountForLevel()
             const enemyTypes = this.getEnemyTypesForLevel()
             
             for (let i = 0; i < enemyCount; i++) {
-                // 延迟生成，避免所有敌人同时出现
-                const delay = wave * 600 + i * 200 // 敌人潮之间间隔更大
+                // 更密集的生成间隔
+                const delay = wave * 300 + i * 80 // 波之间300ms，单个敌人间隔80ms
                 this.time.delayedCall(delay, () => {
                     this.createSingleEnemy(enemyTypes)
                 })
             }
         }
-    }
-      getEnemyCountForLevel() {
-        // 根据等级增加敌人数量
-        if (this.level <= 2) return 1
-        if (this.level <= 5) return 2
-        if (this.level <= 8) return 3
-        if (this.level <= 12) return 4
-        if (this.level <= 18) return 5
-        if (this.level <= 25) return 6
-        return 7 // 超高等级每次生成7个敌人
-    }
-      getEnemyTypesForLevel() {
-        // 根据等级解锁不同类型的敌人
+    }getEnemyCountForLevel() {
+        // 大幅增加敌人数量，陡峭的难度曲线
+        if (this.level <= 1) return 1
+        if (this.level <= 2) return 2
+        if (this.level <= 3) return 4
+        if (this.level <= 4) return 6
+        if (this.level <= 5) return 8
+        if (this.level <= 6) return 10
+        if (this.level <= 7) return 12
+        if (this.level <= 8) return 15
+        if (this.level <= 10) return 18
+        if (this.level <= 12) return 22
+        if (this.level <= 15) return 26
+        if (this.level <= 20) return 30
+        return 35 // 超高等级每次生成35个敌人！
+    }    getEnemyTypesForLevel() {
+        // 更激进的敌人类型解锁，强敌更早出现
         const types = ['basic']
         
-        if (this.level >= 3) types.push('fast')     // 3级解锁快速敌人
-        if (this.level >= 6) types.push('strong')   // 6级解锁强力敌人
-        if (this.level >= 10) {
-            types.push('boss')    // 10级解锁小Boss
+        if (this.level >= 2) types.push('fast')     // 2级就解锁快速敌人
+        if (this.level >= 3) types.push('strong')   // 3级解锁强力敌人  
+        if (this.level >= 4) {
+            types.push('boss')    // 4级就解锁Boss
             
-            // 高等级时增加Boss出现概率
-            if (this.level >= 15) {
-                types.push('boss') // 15级后Boss出现概率翻倍
+            // 高等级时大幅增加强敌出现概率
+            if (this.level >= 5) {
+                types.push('fast', 'strong') // 5级后快速和强力敌人概率翻倍
             }
-            if (this.level >= 20) {
-                types.push('boss', 'boss') // 20级后Boss出现概率更高
+            if (this.level >= 7) {
+                types.push('boss', 'boss') // 7级后Boss概率翻倍
+            }
+            if (this.level >= 10) {
+                types.push('strong', 'strong', 'boss') // 10级后强敌概率大增
+            }
+            if (this.level >= 15) {
+                // 15级后几乎都是强敌和Boss
+                types.push('strong', 'strong', 'boss', 'boss', 'boss')
             }
         }
         
@@ -587,36 +606,44 @@ export default class GameScene extends Phaser.Scene {
         
         // 设置移动动画
         this.setupEnemyMovement(enemy, enemyType)
-    }
-      setupEnemyByType(enemy, type) {
-        // 设置敌人的基础属性
+    }    setupEnemyByType(enemy, type) {
+        // 设置敌人的基础属性，增强血量和分数
         enemy.enemyType = type
         enemy.maxHp = 1
         enemy.currentHp = 1
         enemy.scoreValue = 10
         
+        // 根据等级动态增加敌人强度
+        const levelBonus = Math.max(0, this.level - 5)
+        
         switch (type) {
             case 'basic':
                 enemy.setScale(1.0)
+                if (levelBonus > 0) {
+                    enemy.maxHp += Math.floor(levelBonus / 3) // 高等级时基础敌人也有更多血量
+                    enemy.currentHp = enemy.maxHp
+                }
                 break
                 
             case 'fast':
                 enemy.setScale(0.9)
                 enemy.scoreValue = 15
+                enemy.maxHp = 1 + Math.floor(levelBonus / 2)
+                enemy.currentHp = enemy.maxHp
                 break
                 
             case 'strong':
                 enemy.setScale(1.1)
-                enemy.maxHp = 2
-                enemy.currentHp = 2
-                enemy.scoreValue = 25
+                enemy.maxHp = 3 + Math.floor(levelBonus / 2) // 强力敌人血量更多
+                enemy.currentHp = enemy.maxHp
+                enemy.scoreValue = 25 + levelBonus * 2
                 break
                 
             case 'boss':
-                enemy.setScale(1.0) // boss纹理本身已经较大
-                enemy.maxHp = 3
-                enemy.currentHp = 3
-                enemy.scoreValue = 50
+                enemy.setScale(1.0)
+                enemy.maxHp = 5 + levelBonus // Boss血量随等级大幅增加
+                enemy.currentHp = enemy.maxHp
+                enemy.scoreValue = 50 + levelBonus * 5
                 break
         }
         
@@ -978,24 +1005,27 @@ export default class GameScene extends Phaser.Scene {
         }
         
         return effectText // 返回效果文本用于显示
-    }
-      increaseDifficulty() {
+    }    increaseDifficulty() {
         // 更新敌人生成间隔
         const newDelay = this.getEnemySpawnDelay()
         if (this.enemySpawnTimer) {
             this.enemySpawnTimer.delay = newDelay
         }
         
-        console.log(`📈 难度提升！等级: ${this.level}, 敌人生成间隔: ${newDelay}ms`)
+        console.log(`📈 难度暴增！等级: ${this.level}, 敌人生成间隔: ${newDelay}ms`)
         
         // 升级时的额外效果提示
         let levelBonus = ''
-        if (this.level === 3) levelBonus = ' - 解锁快速敌人！'
-        if (this.level === 6) levelBonus = ' - 解锁强力敌人！'
-        if (this.level === 10) levelBonus = ' - 解锁Boss敌人！'
+        if (this.level === 2) levelBonus = ' - 解锁快速敌人！'
+        if (this.level === 3) levelBonus = ' - 解锁强力敌人！敌人潮开始！'
+        if (this.level === 4) levelBonus = ' - Boss来袭！'
+        if (this.level === 5) levelBonus = ' - 强敌概率翻倍！'
+        if (this.level === 7) levelBonus = ' - Boss概率翻倍！'
+        if (this.level === 10) levelBonus = ' - 强敌统治战场！'
+        if (this.level === 15) levelBonus = ' - 地狱模式！'
         
         if (levelBonus) {
-            console.log(`🎉 等级${this.level}${levelBonus}`)
+            console.log(`🔥 等级${this.level}${levelBonus}`)
         }
     }
     
