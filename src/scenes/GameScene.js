@@ -161,10 +161,9 @@ export default class GameScene extends Phaser.Scene {
                         
                         // 创建死亡效果
                         this.createDeathEffect(enemy.x, enemy.y, enemy.enemyType)
-                        
-                        // Boss或强力敌人有概率掉落道具
-                        if ((enemy.enemyType === 'boss' && Phaser.Math.Between(1, 100) <= 60) ||
-                            (enemy.enemyType === 'strong' && Phaser.Math.Between(1, 100) <= 25)) {
+                          // Boss或强力敌人有更高概率掉落道具
+                        const dropChance = this.calculateDropChance(enemy.enemyType)
+                        if (Phaser.Math.Between(1, 100) <= dropChance) {
                             this.dropPowerUp(enemy.x, enemy.y)
                         }
                         
@@ -494,15 +493,40 @@ export default class GameScene extends Phaser.Scene {
         const reduction = Math.min(this.level * 80, 1500) // 每级减少80ms，最多减少1500ms
         return Math.max(baseDelay - reduction, 150) // 最快150ms生成一次
     }
+      calculateDropChance(enemyType) {
+        // 根据敌人类型和等级计算道具掉落概率
+        let baseChance = 0
+        const levelBonus = Math.min(this.level * 2, 40) // 等级奖励，最多+40%
+        
+        switch (enemyType) {
+            case 'basic':
+                baseChance = 5 // 基础敌人5%基础概率
+                break
+            case 'fast':
+                baseChance = 15 // 快速敌人15%基础概率
+                break
+            case 'strong':
+                baseChance = 35 // 强力敌人35%基础概率
+                break
+            case 'boss':
+                baseChance = 70 // Boss 70%基础概率
+                break
+        }
+        
+        return Math.min(baseChance + levelBonus, 95) // 最高95%概率
+    }
     
     startPowerUpSpawning() {
+        // 增加道具生成频率来平衡高难度
+        const powerUpDelay = Math.max(8000 - this.level * 200, 3000) // 从8秒减少到3秒
+        
         this.powerUpSpawnTimer = this.time.addEvent({
-            delay: 10000, // 每10秒生成一个道具
+            delay: powerUpDelay,
             callback: this.spawnPowerUp,
             callbackScope: this,
             loop: true
         })
-    }      spawnEnemy() {
+    }spawnEnemy() {
         // 大幅增加敌人潮概率和强度
         let waveChance = 0
         let waveCount = 1
@@ -1012,7 +1036,13 @@ export default class GameScene extends Phaser.Scene {
             this.enemySpawnTimer.delay = newDelay
         }
         
-        console.log(`📈 难度暴增！等级: ${this.level}, 敌人生成间隔: ${newDelay}ms`)
+        // 更新道具生成频率
+        const newPowerUpDelay = Math.max(8000 - this.level * 200, 3000)
+        if (this.powerUpSpawnTimer) {
+            this.powerUpSpawnTimer.delay = newPowerUpDelay
+        }
+        
+        console.log(`📈 难度暴增！等级: ${this.level}, 敌人生成间隔: ${newDelay}ms, 道具间隔: ${newPowerUpDelay}ms`)
         
         // 升级时的额外效果提示
         let levelBonus = ''

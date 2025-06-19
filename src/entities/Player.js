@@ -96,28 +96,27 @@ export default class Player extends Phaser.GameObjects.Sprite {
         if (!this.multiShot) {
             // 只有当前没有散射效果时才激活
             this.multiShot = true
-            this.multiShotDuration = 10000 // 10秒持续时间
+            this.multiShotDuration = 15000 // 增加到15秒持续时间
             this.multiShotStartTime = this.scene.time.now
-            console.log(`🎯 五重散射激活！持续10秒`)
+            console.log(`🎯 五重散射激活！持续15秒`)
         } else {
             // 如果已经有散射效果，延长持续时间
-            this.multiShotDuration += 5000 // 延长5秒
-            console.log(`🎯 五重散射效果延长！再延长5秒`)
+            this.multiShotDuration += 8000 // 延长8秒
+            console.log(`🎯 五重散射效果延长！再延长8秒`)
         }
-    }
-      // 护盾效果
+    }      // 护盾效果
     activateShield() {
         if (!this.shieldActive) {
             // 只有当前没有护盾效果时才激活
             this.shieldActive = true
-            this.shieldDuration = 8000 // 8秒持续时间
+            this.shieldDuration = 12000 // 增加到12秒持续时间
             this.shieldStartTime = this.scene.time.now
             this.setTint(0x00ffff) // 蓝色表示护盾
-            console.log(`🛡️ 护盾激活！持续8秒`)
+            console.log(`🛡️ 护盾激活！持续12秒`)
         } else {
             // 如果已经有护盾效果，延长持续时间
-            this.shieldDuration += 4000 // 延长4秒
-            console.log(`🛡️ 护盾效果延长！再延长4秒`)
+            this.shieldDuration += 6000 // 延长6秒
+            console.log(`🛡️ 护盾效果延长！再延长6秒`)
         }
     }
     
