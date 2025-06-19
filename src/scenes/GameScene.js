@@ -95,6 +95,12 @@ export default class GameScene extends Phaser.Scene {
                 bullet.destroy()
             }
         })
+          // 更新敌人并更新血量条
+        this.enemies.children.entries.forEach(enemy => {
+            if (enemy.hasHealthBar) {
+                this.updateEnemyHealthBar(enemy)
+            }
+        })
         
         // 更新道具
         this.powerUps.children.entries.forEach(powerUp => {
@@ -686,8 +692,7 @@ export default class GameScene extends Phaser.Scene {
             ease: 'Linear'
         })
     }
-    
-    createEnemyHealthBar(enemy) {
+      createEnemyHealthBar(enemy) {
         // 创建血量条背景
         const hpBarBg = this.add.rectangle(enemy.x, enemy.y - 25, 30, 4, 0x666666)
         // 创建血量条
@@ -696,28 +701,33 @@ export default class GameScene extends Phaser.Scene {
         enemy.hpBarBg = hpBarBg
         enemy.hpBar = hpBar
         
-        // 血量条跟随敌人移动
-        enemy.moveTween.on('update', () => {
-            if (hpBarBg && hpBarBg.active) {
-                hpBarBg.x = enemy.x
-                hpBarBg.y = enemy.y - 25
+        // 标记需要更新血量条位置
+        enemy.hasHealthBar = true
+    }
+    
+    updateEnemyHealthBar(enemy) {
+        if (!enemy.hasHealthBar || !enemy.hpBarBg || !enemy.hpBar) return
+        
+        // 更新血量条位置
+        if (enemy.hpBarBg.active) {
+            enemy.hpBarBg.x = enemy.x
+            enemy.hpBarBg.y = enemy.y - 25
+        }
+        if (enemy.hpBar.active) {
+            enemy.hpBar.x = enemy.x
+            enemy.hpBar.y = enemy.y - 25
+            // 更新血量条宽度
+            const hpPercent = enemy.currentHp / enemy.maxHp
+            enemy.hpBar.width = 30 * hpPercent
+            // 根据血量改变颜色
+            if (hpPercent > 0.6) {
+                enemy.hpBar.setFillStyle(0x00ff00) // 绿色
+            } else if (hpPercent > 0.3) {
+                enemy.hpBar.setFillStyle(0xffff00) // 黄色
+            } else {
+                enemy.hpBar.setFillStyle(0xff0000) // 红色
             }
-            if (hpBar && hpBar.active) {
-                hpBar.x = enemy.x
-                hpBar.y = enemy.y - 25
-                // 更新血量条宽度
-                const hpPercent = enemy.currentHp / enemy.maxHp
-                hpBar.width = 30 * hpPercent
-                // 根据血量改变颜色
-                if (hpPercent > 0.6) {
-                    hpBar.setFillStyle(0x00ff00) // 绿色
-                } else if (hpPercent > 0.3) {
-                    hpBar.setFillStyle(0xffff00) // 黄色
-                } else {
-                    hpBar.setFillStyle(0xff0000) // 红色
-                }
-            }
-        })
+        }
     }
       createZigzagMovement(enemy, duration) {
         const startX = enemy.x
