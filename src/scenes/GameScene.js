@@ -80,11 +80,13 @@ export default class GameScene extends Phaser.Scene {
         
         console.log('✅ 游戏场景创建完成！')
     }
-    
-    update(time, delta) {
+      update(time, delta) {
         // 更新玩家
         if (this.player) {
             this.player.update()
+            
+            // 更新效果状态显示
+            this.updateEffectsDisplay()
         }
         
         // 更新子弹
@@ -132,32 +134,56 @@ export default class GameScene extends Phaser.Scene {
                 }
             })
         })
-        
-        // 玩家碰到敌人
+          // 玩家碰到敌人
         if (this.player) {
             this.enemies.children.entries.forEach(enemy => {
                 if (this.checkDistance(this.player, enemy, 35)) {
-                    // 停止敌人的动画
-                    if (enemy.moveTween) {
-                        enemy.moveTween.stop()
-                        enemy.moveTween = null
-                    }
-                    if (enemy.rotateTween) {
-                        enemy.rotateTween.stop() 
-                        enemy.rotateTween = null
-                    }
-                    
-                    enemy.destroy()
-                    this.loseLife()
-                    console.log('💀 玩家碰到敌人！')
-                    
-                    // 添加无敌时间，避免连续碰撞
-                    this.player.setTint(0xff0000)
-                    this.time.delayedCall(500, () => {
-                        if (this.player) {
-                            this.player.clearTint()
+                    // 检查护盾是否激活
+                    if (this.player.isShieldActive && this.player.isShieldActive()) {
+                        // 护盾抵挡攻击，只销毁敌人
+                        if (enemy.moveTween) {
+                            enemy.moveTween.stop()
+                            enemy.moveTween = null
                         }
-                    })
+                        if (enemy.rotateTween) {
+                            enemy.rotateTween.stop() 
+                            enemy.rotateTween = null
+                        }
+                        
+                        enemy.destroy()
+                        this.addScore(10) // 护盾反击得分
+                        console.log('🛡️ 护盾抵挡攻击！')
+                        
+                        // 护盾闪光效果
+                        this.player.setTint(0xffffff)
+                        this.time.delayedCall(100, () => {
+                            if (this.player && this.player.isShieldActive()) {
+                                this.player.setTint(0x00ffff) // 恢复护盾颜色
+                            }
+                        })
+                    } else {
+                        // 正常受伤逻辑
+                        if (enemy.moveTween) {
+                            enemy.moveTween.stop()
+                            enemy.moveTween = null
+                        }
+                        if (enemy.rotateTween) {
+                            enemy.rotateTween.stop() 
+                            enemy.rotateTween = null
+                        }
+                        
+                        enemy.destroy()
+                        this.loseLife()
+                        console.log('💀 玩家碰到敌人！')
+                        
+                        // 添加无敌时间，避免连续碰撞
+                        this.player.setTint(0xff0000)
+                        this.time.delayedCall(500, () => {
+                            if (this.player) {
+                                this.player.clearTint()
+                            }
+                        })
+                    }
                 }
             })
             
@@ -273,8 +299,7 @@ export default class GameScene extends Phaser.Scene {
         // 碰撞检测将在update方法中手动处理
         console.log('✅ 碰撞系统已设置（手动检测模式）')
     }
-    
-    createUI() {
+      createUI() {
         // 分数显示
         this.scoreText = this.add.text(16, 16, `分数: ${this.score}`, {
             fontSize: '24px',
@@ -293,6 +318,13 @@ export default class GameScene extends Phaser.Scene {
         this.levelText = this.add.text(16, 84, `等级: ${this.level}`, {
             fontSize: '24px',
             fill: '#ffffff',
+            fontFamily: 'Arial'
+        })
+        
+        // 效果状态显示
+        this.effectsText = this.add.text(16, 118, '', {
+            fontSize: '20px',
+            fill: '#ffff00',
             fontFamily: 'Arial'
         })
     }
@@ -453,11 +485,11 @@ export default class GameScene extends Phaser.Scene {
             this.gameOver()
         }
     }    collectPowerUp() {
-        // 加分效果
+        // 基础加分效果
         this.addScore(50)
         
-        // 随机选择道具效果
-        const powerUpType = Phaser.Math.Between(1, 3)
+        // 随机选择道具效果（扩展到7种）
+        const powerUpType = Phaser.Math.Between(1, 7)
         let effectText = '+50'
         
         switch (powerUpType) {
@@ -482,6 +514,42 @@ export default class GameScene extends Phaser.Scene {
                 this.addScore(100)
                 effectText = '+150'
                 console.log('💰 获得道具：额外分数奖励！')
+                break
+            case 4:
+                // 多重子弹
+                if (this.player && this.player.enableMultiShot) {
+                    this.player.enableMultiShot()
+                    effectText = '🎯三重射击'
+                    console.log('🎯 获得道具：多重子弹！')
+                }
+                break
+            case 5:
+                // 护盾
+                if (this.player && this.player.activateShield) {
+                    this.player.activateShield()
+                    effectText = '🛡️护盾'
+                    console.log('🛡️ 获得道具：护盾激活！')
+                }
+                break
+            case 6:
+                // 炸弹 - 清除所有敌人
+                this.clearAllEnemies()
+                effectText = '💣清屏'
+                console.log('💣 获得道具：炸弹清屏！')
+                break
+            case 7:
+                // 恢复生命
+                if (this.lives < 3) {
+                    this.lives++
+                    this.livesText.setText(`生命: ${this.lives}`)
+                    effectText = '❤️生命+'
+                    console.log('❤️ 获得道具：生命恢复！')
+                } else {
+                    // 生命已满，给额外分数
+                    this.addScore(200)
+                    effectText = '+250'
+                    console.log('💰 生命已满，获得额外分数！')
+                }
                 break
         }
         
@@ -617,5 +685,71 @@ export default class GameScene extends Phaser.Scene {
                 bonusText.destroy()
             }
         })
+    }
+    
+    clearAllEnemies() {
+        // 炸弹效果：清除所有敌人并给予分数奖励
+        let enemiesCleared = 0
+        
+        this.enemies.children.entries.forEach(enemy => {
+            if (enemy && enemy.active) {
+                // 停止敌人动画
+                if (enemy.moveTween) {
+                    enemy.moveTween.stop()
+                    enemy.moveTween = null
+                }
+                if (enemy.rotateTween) {
+                    enemy.rotateTween.stop()
+                    enemy.rotateTween = null
+                }
+                
+                // 创建爆炸效果
+                this.createBombEffect(enemy.x, enemy.y)
+                
+                enemy.destroy()
+                enemiesCleared++
+            }
+        })
+        
+        // 根据清除的敌人数量给予分数
+        const bonusScore = enemiesCleared * 20
+        if (bonusScore > 0) {
+            this.addScore(bonusScore)
+            console.log(`💣 炸弹清除了 ${enemiesCleared} 个敌人，获得 ${bonusScore} 分！`)
+        }
+    }
+    
+    createBombEffect(x, y) {
+        // 创建爆炸效果
+        const explosion = this.add.circle(x, y, 5, 0xff4444)
+        
+        this.tweens.add({
+            targets: explosion,
+            scaleX: 4,
+            scaleY: 4,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                explosion.destroy()
+            }
+        })
+    }
+      updateEffectsDisplay() {
+        if (!this.player || !this.effectsText) return
+        
+        let effects = []
+        
+        if (this.player.isMultiShotActive()) {
+            const remaining = Math.ceil((this.player.multiShotDuration - (this.time.now - this.player.multiShotStartTime)) / 1000)
+            effects.push(`🎯三重射击 ${remaining}s`)
+        }
+        
+        if (this.player.isShieldActive()) {
+            const remaining = Math.ceil((this.player.shieldDuration - (this.time.now - this.player.shieldStartTime)) / 1000)
+            effects.push(`🛡️护盾 ${remaining}s`)
+        }
+        
+        this.effectsText.setText(effects.join(' | '))
     }
 }
