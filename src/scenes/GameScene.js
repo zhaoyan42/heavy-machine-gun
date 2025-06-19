@@ -219,31 +219,34 @@ export default class GameScene extends Phaser.Scene {
             }
         })
     }
-    
-    createColorGraphics() {
+      createColorGraphics() {
         // 创建玩家图形（绿色矩形）
-        this.add.graphics()
+        const playerGraphics = this.add.graphics()
             .fillStyle(0x00ff00)
             .fillRect(0, 0, 40, 40)
-            .generateTexture('player', 40, 40)
+        playerGraphics.generateTexture('player', 40, 40)
+        playerGraphics.destroy() // 销毁图形对象
         
         // 创建子弹图形（黄色小矩形）
-        this.add.graphics()
+        const bulletGraphics = this.add.graphics()
             .fillStyle(0xffff00)
             .fillRect(0, 0, 4, 12)
-            .generateTexture('bullet', 4, 12)
+        bulletGraphics.generateTexture('bullet', 4, 12)
+        bulletGraphics.destroy() // 销毁图形对象
         
         // 创建敌人图形（红色矩形）
-        this.add.graphics()
+        const enemyGraphics = this.add.graphics()
             .fillStyle(0xff0000)
             .fillRect(0, 0, 35, 35)
-            .generateTexture('enemy', 35, 35)
+        enemyGraphics.generateTexture('enemy', 35, 35)
+        enemyGraphics.destroy() // 销毁图形对象
         
         // 创建道具图形（紫色圆形）
-        this.add.graphics()
+        const powerupGraphics = this.add.graphics()
             .fillStyle(0xff00ff)
             .fillCircle(15, 15, 15)
-            .generateTexture('powerup', 30, 30)
+        powerupGraphics.generateTexture('powerup', 30, 30)
+        powerupGraphics.destroy() // 销毁图形对象
     }
     
     setupInput() {
