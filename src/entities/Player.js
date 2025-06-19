@@ -46,15 +46,19 @@ export default class Player extends Phaser.GameObjects.Sprite {
         
         // 限制在屏幕范围内
         this.x = Phaser.Math.Clamp(this.x, 20, this.scene.cameras.main.width - 20)
-    }
-      handleShooting(currentTime) {
+    }    handleShooting(currentTime) {
+        // 检查游戏是否结束，如果结束则停止射击
+        if (this.scene.isGameOver) {
+            return
+        }
+        
         // 自动射击
         if (currentTime - this.lastFired > this.fireRate) {
             console.log(`🔥 玩家射击！时间: ${currentTime}`)
             this.fire()
             this.lastFired = currentTime
         }
-    }    fire() {
+    }fire() {
         // 在玩家位置上方发射子弹
         console.log(`💥 调用fireBullet - 玩家位置: (${this.x}, ${this.y})`)
         

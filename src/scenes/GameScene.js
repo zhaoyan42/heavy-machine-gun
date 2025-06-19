@@ -5,14 +5,14 @@ import Bullet from '../entities/Bullet.js'
 import PowerUp from '../entities/PowerUp.js'
 import GameUtils from '../utils/GameUtils.js'
 
-export default class GameScene extends Phaser.Scene {
-    constructor() {
+export default class GameScene extends Phaser.Scene {    constructor() {
         super({ key: 'GameScene' })
           // 游戏状态
         this.score = 0
         this.lives = 3
         this.level = 1
         this.enemiesKilled = 0 // 击败敌人计数
+        this.isGameOver = false // 游戏结束标志
         
         // 游戏对象组
         this.player = null
@@ -45,12 +45,12 @@ export default class GameScene extends Phaser.Scene {
     }
     
     create() {
-        console.log('🎮 创建游戏场景...')
-          // 重置游戏状态（重要：scene.restart()不会重新调用构造函数）
+        console.log('🎮 创建游戏场景...')        // 重置游戏状态（重要：scene.restart()不会重新调用构造函数）
         this.score = 0
         this.lives = 3
         this.level = 1
         this.enemiesKilled = 0 // 击败敌人计数
+        this.isGameOver = false // 重置游戏结束标志
         
         // 重置调试计数器
         this.debugFrameCount = 0
@@ -79,8 +79,12 @@ export default class GameScene extends Phaser.Scene {
         this.startPowerUpSpawning()
         
         console.log('✅ 游戏场景创建完成！')
-    }
-      update(time, delta) {
+    }    update(time, delta) {
+        // 如果游戏结束，停止所有更新逻辑
+        if (this.isGameOver) {
+            return
+        }
+        
         // 更新玩家
         if (this.player) {
             this.player.update()
@@ -518,7 +522,12 @@ export default class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         })
-    }      spawnEnemy() {
+    }    spawnEnemy() {
+        // 检查游戏是否结束，如果结束则停止生成敌人
+        if (this.isGameOver) {
+            return
+        }
+        
         // 降低敌人潮概率和强度
         let waveChance = 0
         let waveCount = 1
@@ -588,8 +597,12 @@ export default class GameScene extends Phaser.Scene {
         }
         
         return types
-    }
-      createSingleEnemy(availableTypes) {
+    }    createSingleEnemy(availableTypes) {
+        // 检查游戏是否结束，如果结束则停止创建敌人
+        if (this.isGameOver) {
+            return
+        }
+        
         const x = Phaser.Math.Between(50, this.cameras.main.width - 50)
         const enemyType = Phaser.Utils.Array.GetRandom(availableTypes)
         
@@ -830,8 +843,12 @@ export default class GameScene extends Phaser.Scene {
                 }
             }
         })
-    }
-      spawnPowerUp() {
+    }    spawnPowerUp() {
+        // 检查游戏是否结束，如果结束则停止生成道具
+        if (this.isGameOver) {
+            return
+        }
+        
         const x = Phaser.Math.Between(50, this.cameras.main.width - 50)
         console.log(`✨ 生成道具 - 位置: (${x}, -50)`)
         
@@ -1047,9 +1064,11 @@ export default class GameScene extends Phaser.Scene {
             console.log(`🎉 等级${this.level}${levelBonus}`)
         }
     }
-    
-    gameOver() {
+      gameOver() {
         console.log('💀 游戏结束！')
+        
+        // 设置游戏结束标志，停止所有更新逻辑
+        this.isGameOver = true
         
         // 保存最高分
         const isNewRecord = GameUtils.saveHighScore(this.score)
