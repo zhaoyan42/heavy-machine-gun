@@ -299,37 +299,31 @@ export default class GameScene extends Phaser.Scene {
             }
         })
     }
-    
-    createDeathEffect(x, y, enemyType) {
-        // 根据敌人类型创建不同的死亡效果
+      createDeathEffect(x, y, enemyType) {
+        // 大幅简化死亡效果，减少粒子数量，避免闪烁
+        let particles = 4 // 统一减少到4个粒子
+        let duration = 300 // 统一300ms持续时间
         let color = 0xff4444
-        let particles = 8
-        let duration = 500
         
         switch (enemyType) {
             case 'fast':
                 color = 0xff8800
-                particles = 6
-                duration = 300
                 break
             case 'strong':
                 color = 0x8800ff
-                particles = 12
-                duration = 700
                 break
             case 'boss':
                 color = 0x000088
-                particles = 16
-                duration = 1000
+                particles = 6 // Boss稍微多一点，但仍然很少
                 break
         }
         
-        // 创建粒子爆炸效果
+        // 创建简化的粒子爆炸效果
         for (let i = 0; i < particles; i++) {
             const angle = (Math.PI * 2 / particles) * i
-            const distance = Phaser.Math.Between(20, 40)
+            const distance = Phaser.Math.Between(15, 25) // 减少距离
             
-            const particle = this.add.circle(x, y, 3, color)
+            const particle = this.add.circle(x, y, 2, color) // 减小粒子尺寸
             
             this.tweens.add({
                 targets: particle,
@@ -338,17 +332,18 @@ export default class GameScene extends Phaser.Scene {
                 alpha: 0,
                 scale: 0.1,
                 duration: duration,
-                ease: 'Power2',
+                ease: 'Linear', // 使用更简单的缓动
                 onComplete: () => {
                     particle.destroy()
                 }
             })
         }
-          // Boss死亡时的减弱震屏效果，避免闪烁
-        if (enemyType === 'boss') {
-            GameUtils.screenShake(this, 4, 200) // 降低强度从8->4，持续时间从400->200
-        }
-    }      createColorGraphics() {
+        
+        // 完全禁用Boss死亡时的震屏效果
+        // if (enemyType === 'boss') {
+        //     GameUtils.screenShake(this, 4, 200)
+        // }
+    }createColorGraphics() {
         // 创建玩家图形（绿色矩形）
         const playerGraphics = this.add.graphics()
             .fillStyle(0x00ff00)
@@ -1177,70 +1172,84 @@ export default class GameScene extends Phaser.Scene {
             }
         })
     }    clearAllEnemies() {
-        // 炸弹效果：清除所有敌人并给予分数奖励
+        // 炸弹效果：分批清除敌人，避免同时销毁造成闪烁
+        const allEnemies = this.enemies.children.entries.slice() // 创建副本
         let enemiesCleared = 0
         let totalScore = 0
         
-        // 限制同时创建的爆炸效果数量，避免性能问题
-        let explosionCount = 0
-        const maxExplosions = 10
+        if (allEnemies.length === 0) return
         
-        this.enemies.children.entries.forEach(enemy => {
-            if (enemy && enemy.active) {
-                // 停止敌人动画
-                if (enemy.moveTween) {
-                    enemy.moveTween.stop()
-                    enemy.moveTween = null
-                }
-                if (enemy.rotateTween) {
-                    enemy.rotateTween.stop()
-                    enemy.rotateTween = null
-                }
-                
-                // 销毁血量条
-                if (enemy.hpBarBg) {
-                    enemy.hpBarBg.destroy()
-                }
-                if (enemy.hpBar) {
-                    enemy.hpBar.destroy()
-                }
-                
-                // 只为前几个敌人创建爆炸效果，避免性能问题
-                if (explosionCount < maxExplosions) {
-                    this.createBombEffect(enemy.x, enemy.y)
-                    explosionCount++
-                }
-                
-                // 根据敌人类型计算分数
-                const baseScore = enemy.scoreValue || 10
-                totalScore += baseScore
-                
-                enemy.destroy()
-                enemiesCleared++
-            }
-        })        // 给予分数奖励
-        if (totalScore > 0) {
-            this.addScore(totalScore)
-            console.log(`💣 炸弹清除了 ${enemiesCleared} 个敌人，获得 ${totalScore} 分！`)
-            
-            // 只有少量敌人时才震动，避免大量敌人清除时的视觉问题
-            if (enemiesCleared > 0 && enemiesCleared <= 10) {
-                GameUtils.screenShake(this, 2, 100) // 进一步降低强度
-            }
+        console.log(`💣 开始分批清除 ${allEnemies.length} 个敌人...`)
+        
+        // 分批处理，每批最多5个敌人
+        const batchSize = 5
+        const batches = []
+        
+        for (let i = 0; i < allEnemies.length; i += batchSize) {
+            batches.push(allEnemies.slice(i, i + batchSize))
         }
+        
+        // 逐批处理敌人
+        batches.forEach((batch, batchIndex) => {
+            this.time.delayedCall(batchIndex * 50, () => { // 每批间隔50ms
+                batch.forEach((enemy, enemyIndex) => {
+                    if (enemy && enemy.active) {
+                        // 停止敌人动画
+                        if (enemy.moveTween) {
+                            enemy.moveTween.stop()
+                            enemy.moveTween = null
+                        }
+                        if (enemy.rotateTween) {
+                            enemy.rotateTween.stop()
+                            enemy.rotateTween = null
+                        }
+                        
+                        // 销毁血量条
+                        if (enemy.hpBarBg) {
+                            enemy.hpBarBg.destroy()
+                        }
+                        if (enemy.hpBar) {
+                            enemy.hpBar.destroy()
+                        }
+                        
+                        // 只为第一批的少数敌人创建效果
+                        if (batchIndex === 0 && enemyIndex < 3) {
+                            this.createBombEffect(enemy.x, enemy.y)
+                        }
+                        
+                        // 根据敌人类型计算分数
+                        const baseScore = enemy.scoreValue || 10
+                        totalScore += baseScore
+                        
+                        enemy.destroy()
+                        enemiesCleared++
+                    }
+                })
+                
+                // 在最后一批处理完成后给予分数
+                if (batchIndex === batches.length - 1) {
+                    this.time.delayedCall(100, () => {
+                        this.addScore(totalScore)
+                        console.log(`💣 炸弹清除了 ${enemiesCleared} 个敌人，获得 ${totalScore} 分！`)
+                        
+                        // 完全禁用震动效果
+                        // GameUtils.screenShake(this, 2, 100)
+                    })
+                }
+            })
+        })
     }
-    
-    createBombEffect(x, y) {
-        // 创建爆炸效果
-        const explosion = this.add.circle(x, y, 5, 0xff4444)
+      createBombEffect(x, y) {
+        // 极简的爆炸效果，避免渲染问题
+        const explosion = this.add.circle(x, y, 3, 0xff4444) // 减小尺寸
         
         this.tweens.add({
             targets: explosion,
-            scaleX: 4,
-            scaleY: 4,
+            scaleX: 2, // 减小缩放倍数
+            scaleY: 2,
             alpha: 0,
-            duration: 300,
-            ease: 'Power2',
+            duration: 200, // 缩短持续时间
+            ease: 'Linear', // 使用更简单的缓动
             onComplete: () => {
                 explosion.destroy()
             }

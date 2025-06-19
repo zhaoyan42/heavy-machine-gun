@@ -88,20 +88,23 @@ export default class GameUtils {
         const b = Math.round(b1 + (b2 - b1) * factor)
         
         return (r << 16) | (g << 8) | b
-    }
-      // 震屏效果 - 改进版本，避免渲染问题
+    }    // 震屏效果 - 完全禁用以避免闪烁问题
     static screenShake(scene, intensity = 10, duration = 100) {
-        if (scene.cameras && scene.cameras.main) {
-            // 限制震动强度和持续时间，避免过度震动
-            const limitedIntensity = Math.min(intensity, 10)
-            const limitedDuration = Math.min(duration, 300)
-            
-            try {
-                scene.cameras.main.shake(limitedDuration, limitedIntensity)
-            } catch (error) {
-                console.warn('屏幕震动失败:', error)
-            }
-        }
+        // 暂时完全禁用屏幕震动，避免闪烁问题
+        console.log('屏幕震动已禁用，避免闪烁问题')
+        return
+        
+        // if (scene.cameras && scene.cameras.main) {
+        //     // 限制震动强度和持续时间，避免过度震动
+        //     const limitedIntensity = Math.min(intensity, 10)
+        //     const limitedDuration = Math.min(duration, 300)
+        //     
+        //     try {
+        //         scene.cameras.main.shake(limitedDuration, limitedIntensity)
+        //     } catch (error) {
+        //         console.warn('屏幕震动失败:', error)
+        //     }
+        // }
     }
     
     // 保存最高分到本地存储
