@@ -344,10 +344,9 @@ export default class GameScene extends Phaser.Scene {
                 }
             })
         }
-        
-        // Boss死亡时的额外震屏效果
+          // Boss死亡时的减弱震屏效果，避免闪烁
         if (enemyType === 'boss') {
-            GameUtils.screenShake(this, 8, 400)
+            GameUtils.screenShake(this, 4, 200) // 降低强度从8->4，持续时间从400->200
         }
     }      createColorGraphics() {
         // 创建玩家图形（绿色矩形）
@@ -937,16 +936,15 @@ export default class GameScene extends Phaser.Scene {
     addScore(points) {
         this.score += points
         this.scoreText.setText(`分数: ${GameUtils.formatScore(this.score)}`)
-        
-        // 每1000分升级
+          // 每1000分升级
         const newLevel = GameUtils.calculateLevel(this.score)
         if (newLevel > this.level) {
             this.level = newLevel
             this.levelText.setText(`等级: ${this.level}`)
             this.increaseDifficulty()
             
-            // 升级时的屏幕震动效果
-            GameUtils.screenShake(this, 5, 200)
+            // 移除升级时的屏幕震动，避免闪烁
+            // GameUtils.screenShake(this, 5, 200)
         }
     }
     
@@ -1178,11 +1176,14 @@ export default class GameScene extends Phaser.Scene {
                 bonusText.destroy()
             }
         })
-    }
-      clearAllEnemies() {
+    }    clearAllEnemies() {
         // 炸弹效果：清除所有敌人并给予分数奖励
         let enemiesCleared = 0
         let totalScore = 0
+        
+        // 限制同时创建的爆炸效果数量，避免性能问题
+        let explosionCount = 0
+        const maxExplosions = 10
         
         this.enemies.children.entries.forEach(enemy => {
             if (enemy && enemy.active) {
@@ -1204,8 +1205,11 @@ export default class GameScene extends Phaser.Scene {
                     enemy.hpBar.destroy()
                 }
                 
-                // 创建爆炸效果
-                this.createBombEffect(enemy.x, enemy.y)
+                // 只为前几个敌人创建爆炸效果，避免性能问题
+                if (explosionCount < maxExplosions) {
+                    this.createBombEffect(enemy.x, enemy.y)
+                    explosionCount++
+                }
                 
                 // 根据敌人类型计算分数
                 const baseScore = enemy.scoreValue || 10
@@ -1214,15 +1218,15 @@ export default class GameScene extends Phaser.Scene {
                 enemy.destroy()
                 enemiesCleared++
             }
-        })
-        
-        // 给予分数奖励
+        })        // 给予分数奖励
         if (totalScore > 0) {
             this.addScore(totalScore)
             console.log(`💣 炸弹清除了 ${enemiesCleared} 个敌人，获得 ${totalScore} 分！`)
             
-            // 屏幕震动效果
-            GameUtils.screenShake(this, 6, 300)
+            // 只有少量敌人时才震动，避免大量敌人清除时的视觉问题
+            if (enemiesCleared > 0 && enemiesCleared <= 10) {
+                GameUtils.screenShake(this, 2, 100) // 进一步降低强度
+            }
         }
     }
     

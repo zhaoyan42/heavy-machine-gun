@@ -89,11 +89,18 @@ export default class GameUtils {
         
         return (r << 16) | (g << 8) | b
     }
-    
-    // 震屏效果
+      // 震屏效果 - 改进版本，避免渲染问题
     static screenShake(scene, intensity = 10, duration = 100) {
         if (scene.cameras && scene.cameras.main) {
-            scene.cameras.main.shake(duration, intensity)
+            // 限制震动强度和持续时间，避免过度震动
+            const limitedIntensity = Math.min(intensity, 10)
+            const limitedDuration = Math.min(duration, 300)
+            
+            try {
+                scene.cameras.main.shake(limitedDuration, limitedIntensity)
+            } catch (error) {
+                console.warn('屏幕震动失败:', error)
+            }
         }
     }
     
