@@ -38,42 +38,55 @@ export default class EnemySpawnManager {
     }
 
     /**
+     * 生成一波敌人（初始多于1个，随等级递增）
+     */
+    spawnEnemyWave() {
+        if (this.scene.isGameOver) return;
+        // 初始数量提升，随等级递增
+        const baseCount = 3;
+        const levelFactor = Math.floor((this.scene.level - 1) / 3);
+        const count = baseCount + levelFactor;
+        for (let i = 0; i < count; i++) {
+            this.spawnSingleEnemy();
+        }
+    }
+
+    /**
      * 生成单个敌人
      */
-    spawnEnemy() {
-        if (this.scene.isGameOver) return
-
-        const x = Phaser.Math.Between(50, this.scene.cameras.main.width - 50)
-        const y = -50
-
-        // 根据等级调整敌人属性
-        const enemySpeed = this.calculateEnemySpeed()
-        const enemyHp = this.calculateEnemyHp()
-        
-        const enemy = new Enemy(this.scene, x, y, enemySpeed, enemyHp)
-        this.scene.enemies.add(enemy)
-
-        // 添加血量条（如果血量大于1）
+    spawnSingleEnemy() {
+        const x = Phaser.Math.Between(50, this.scene.cameras.main.width - 50);
+        const y = -50;
+        // 更高初始速度和血量，递增更平滑
+        const enemySpeed = this.calculateEnemySpeed();
+        const enemyHp = this.calculateEnemyHp();
+        const enemy = new Enemy(this.scene, x, y, enemySpeed, enemyHp);
+        this.scene.enemies.add(enemy);
         if (enemyHp > 1) {
-            this.addHealthBar(enemy)
+            this.addHealthBar(enemy);
         }
+        console.log(`👾 生成敌人 位置:(${x}, ${y}) 速度:${enemySpeed} 血量:${enemyHp}`);
+    }
 
-        console.log(`👾 生成敌人 位置:(${x}, ${y}) 速度:${enemySpeed} 血量:${enemyHp}`)
+    // 修改原有spawnEnemy为调用spawnEnemyWave
+    spawnEnemy() {
+        this.spawnEnemyWave();
     }
 
     /**
-     * 根据等级计算敌人速度
+     * 根据等级计算敌人速度（初始更高，递增更平滑）
      */
     calculateEnemySpeed() {
-        return ENEMY_CONFIG.BASE_SPEED + (this.scene.level - 1) * ENEMY_CONFIG.SPEED_INCREASE
+        // 初始速度提升，递增更平滑
+        return ENEMY_CONFIG.BASE_SPEED + 40 + (this.scene.level - 1) * 10;
     }
 
     /**
-     * 根据等级计算敌人血量
+     * 根据等级计算敌人血量（初始更高，递增更平滑）
      */
     calculateEnemyHp() {
-        const hpLevel = Math.floor((this.scene.level - 1) / ENEMY_CONFIG.HP_INCREASE_LEVEL)
-        return ENEMY_CONFIG.BASE_HP + hpLevel
+        // 初始血量提升，递增更平滑
+        return ENEMY_CONFIG.BASE_HP + 1 + Math.floor((this.scene.level - 1) * 0.5);
     }
 
     /**

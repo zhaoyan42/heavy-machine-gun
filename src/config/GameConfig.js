@@ -54,8 +54,8 @@ export const SCORING_CONFIG = {
 export const EFFECTS_CONFIG = {
     HIT_EFFECT_DURATION: 200,
     FLASH_DURATION: 100,
-    SHAKE_INTENSITY: 5,
-    PARTICLE_COUNT: 10
+    SHAKE_INTENSITY: 0.003,        // 完全禁用震动效果
+    PARTICLE_COUNT: 3          // 保持粒子效果作为视觉反馈
 }
 
 // 调试配置

@@ -1,7 +1,6 @@
 import Phaser from 'phaser'
 
-export default class Enemy extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y) {
+export default class Enemy extends Phaser.Physics.Arcade.Sprite {    constructor(scene, x, y, speed = null, hp = null) {
         super(scene, x, y, 'enemy')
         
         // 添加到场景和物理系统
@@ -10,11 +9,13 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         
         // 设置物理属性
         this.setCollideWorldBounds(false) // 允许敌人移出屏幕
-        
-        // 敌人属性
-        this.speed = Phaser.Math.Between(100, 200) // 随机速度
-        this.health = 1
+          // 敌人属性 - 使用传入的参数或默认值
+        this.speed = speed || Phaser.Math.Between(100, 200) // 随机速度
+        this.health = hp || 1
+        this.maxHp = hp || 1  // 最大血量
+        this.currentHp = hp || 1  // 当前血量 
         this.points = 10
+        this.scoreValue = 10  // 分数值属性
         
         // 设置初始速度（向下移动）
         this.setVelocityY(this.speed)

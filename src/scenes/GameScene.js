@@ -109,17 +109,18 @@ export default class GameScene extends Phaser.Scene {
         this.enemySpawnManager = new EnemySpawnManager(this)
         this.powerUpSpawnManager = new PowerUpSpawnManager(this)
         this.effectsManager = new EffectsManager(this)
-    }
-
-    /**
+    }    /**
      * 设置输入控制
      */
     setupInput() {
         // 键盘输入
         this.cursors = this.input.keyboard.createCursorKeys()
         
-        // 触屏/鼠标输入
+        // 触屏/鼠标点击输入（保持兼容移动设备）
         this.input.on('pointerdown', this.handlePointerInput, this)
+        
+        // 鼠标移动输入（桌面设备体验优化）
+        this.input.on('pointermove', this.handlePointerMove, this)
         
         // 禁用右键菜单
         this.input.mouse.disableContextMenu()
@@ -162,19 +163,19 @@ export default class GameScene extends Phaser.Scene {
 
         // 道具纹理
         this.createPowerUpTextures()
-    }
-
-    /**
+    }    /**
      * 创建道具纹理
      */
     createPowerUpTextures() {
-        // 多重射击道具 - 橙色星形
+        // 多重射击道具 - 橙色菱形
         this.add.graphics()
             .fillStyle(0xff8800)
-            .fillStar(15, 15, 5, 10, 15, 0)
+            .fillRect(10, 10, 10, 10)
+            .fillTriangle(15, 5, 25, 15, 15, 25)
+            .fillTriangle(15, 25, 5, 15, 15, 5)
             .generateTexture('powerup-multiShot', 30, 30)
 
-        // 护盾道具 - 青色盾形
+        // 护盾道具 - 青色圆形
         this.add.graphics()
             .fillStyle(0x00ffff)
             .fillCircle(15, 15, 15)
@@ -191,9 +192,7 @@ export default class GameScene extends Phaser.Scene {
             .fillStyle(0xff0066)
             .fillEllipse(15, 15, 20, 15)
             .generateTexture('powerup-extraLife', 30, 30)
-    }
-
-    /**
+    }    /**
      * 处理触屏/鼠标输入
      */
     handlePointerInput(pointer) {
@@ -205,6 +204,17 @@ export default class GameScene extends Phaser.Scene {
         if (this.player) {
             this.player.moveTo(pointer.x, pointer.y)
         }
+    }    /**
+     * 处理鼠标移动输入（桌面设备优化）
+     */
+    handlePointerMove(pointer) {
+        // 只在非游戏结束状态下响应鼠标移动
+        if (this.isGameOver || !this.player) {
+            return
+        }
+
+        // 响应鼠标移动，让玩家跟随鼠标位置
+        this.player.moveTo(pointer.x, pointer.y)
     }
 
     /**
@@ -224,6 +234,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     /**
+     * 发射子弹
+     */
+    fireBullet(x, y, angle = -Math.PI / 2) {
+        const bullet = new Bullet(this, x, y, angle)
+        this.bullets.add(bullet)
+    }
+
+    /**
      * 主更新循环
      */
     update() {
@@ -234,12 +252,15 @@ export default class GameScene extends Phaser.Scene {
         this.cleanupOutOfBoundsObjects()
         this.updateManagers()
         this.updateDebugInfo()
-    }
-
-    /**
+    }    /**
      * 更新游戏对象
      */
     updateGameObjects() {
+        // 更新玩家
+        if (this.player) {
+            this.player.update()
+        }
+
         // 更新子弹
         this.bullets.children.entries.forEach(bullet => {
             if (bullet.y < -50) {

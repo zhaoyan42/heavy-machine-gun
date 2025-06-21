@@ -86,7 +86,15 @@ export default class Player extends Phaser.GameObjects.Sprite {
         // 限制目标位置在屏幕范围内
         this.targetX = Phaser.Math.Clamp(x, 20, this.scene.cameras.main.width - 20)
     }
-      // 道具效果方法
+
+    /**
+     * 移动到指定位置
+     */
+    moveTo(x, y) {
+        this.setTargetX(x)
+    }
+
+    // 道具效果方法
     increaseFireRate() {
         this.fireRate = Math.max(50, this.fireRate - 30)
         console.log(`🔥 射击速度提升！当前间隔: ${this.fireRate}ms`)
