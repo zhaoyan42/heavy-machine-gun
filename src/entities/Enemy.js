@@ -53,27 +53,36 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {    constructor
         
         return false // 敌人仍然存活
     }
-    
-    destroy() {
-        // 创建爆炸效果
-        this.createExplosionEffect()
+      destroy() {
+        // 在销毁前检查scene是否存在，并创建爆炸效果
+        if (this.scene && this.scene.add) {
+            this.createExplosionEffect()
+        }
         
         // 调用父类的destroy方法
         super.destroy()
     }
     
     createExplosionEffect() {
+        // 安全检查：确保scene和add方法存在
+        if (!this.scene || !this.scene.add) {
+            console.warn('⚠️ 无法创建爆炸效果：scene不可用')
+            return
+        }
+        
         // 创建简单的爆炸粒子效果
         const particles = this.scene.add.particles(this.x, this.y, 'enemy', {
             speed: { min: 50, max: 150 },
             scale: { start: 0.5, end: 0 },
             lifespan: 300,
             quantity: 8
-        })
-        
-        // 1秒后移除粒子效果
-        this.scene.time.delayedCall(1000, () => {
-            particles.destroy()
-        })
+        })          // 1秒后移除粒子效果（使用安全检查）
+        if (this.scene && this.scene.time) {
+            this.scene.time.delayedCall(1000, () => {
+                if (particles && !particles.destroyed) {
+                    particles.destroy()
+                }
+            })
+        }
     }
 }
