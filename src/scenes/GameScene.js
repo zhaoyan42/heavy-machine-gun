@@ -124,20 +124,13 @@ export default class GameScene extends Phaser.Scene {
         
         // 禁用右键菜单
         this.input.mouse.disableContextMenu()
-    }
-
-    /**
+    }    /**
      * 启动游戏循环
      */
     startGameLoop() {
-        // 玩家自动射击
-        this.time.addEvent({
-            delay: PLAYER_CONFIG.FIRE_RATE,
-            callback: this.playerFire,
-            callbackScope: this,
-            loop: true
-        })
-    }    /**
+        // 注释：玩家射击现在由Player.js的handleShooting()方法处理
+        // 移除了重复的定时器射击逻辑，避免双重射击问题
+    }/**
      * 创建简单图形作为临时资源
      */
     createColorGraphics() {
@@ -220,22 +213,15 @@ export default class GameScene extends Phaser.Scene {
 
         // 响应鼠标移动，让玩家跟随鼠标位置
         this.player.moveTo(pointer.x, pointer.y)
-    }
-
-    /**
-     * 玩家射击
+    }    /**
+     * 玩家射击（备用方法，当前由Player.js处理射击逻辑）
      */
     playerFire() {
+        // 此方法已停用，射击逻辑已移至Player.js的handleShooting()
+        // 保留此方法以防将来需要手动射击功能
         if (this.isGameOver || !this.player) return
 
-        const bullets = this.player.fire()
-        if (bullets) {
-            if (Array.isArray(bullets)) {
-                bullets.forEach(bullet => this.bullets.add(bullet))
-            } else {
-                this.bullets.add(bullets)
-            }
-        }
+        console.log('⚠️ playerFire被调用，但射击逻辑已在Player.js中处理')
     }
 
     /**
@@ -310,38 +296,59 @@ export default class GameScene extends Phaser.Scene {
         if (this.uiManager && this.player) {
             this.uiManager.updatePlayerStatus(this.player, this)
         }
-    }
-
-    /**
+    }    /**
      * 更新调试信息
      */
     updateDebugInfo() {
         this.debugFrameCount++
         
         if (this.debugFrameCount % 60 === 0) { // 每秒更新一次
+            const nextLevelEnemies = this.calculateRequiredEnemies(this.level + 1) - this.enemiesKilled
             const debugInfo = [
                 `等级: ${this.level}`,
-                `击败敌人: ${this.enemiesKilled}`
+                `击败敌人: ${this.enemiesKilled}`,
+                `升级还需: ${nextLevelEnemies}个敌人`
             ]
             this.uiManager.updateDebugInfo(debugInfo)
         }
-    }
-
-    /**
+    }/**
      * 增加分数
      */
     addScore(points) {
         this.score += points
         this.uiManager.updateScore(this.score)
         
-        // 检查是否升级
-        const newLevel = Math.floor(this.score / SCORING_CONFIG.LEVEL_UP_THRESHOLD) + 1
-        if (newLevel > this.level) {
-            this.levelUp(newLevel)
+        // 记录击败敌人数量
+        if (points === SCORING_CONFIG.ENEMY_KILL_POINTS) {
+            this.enemiesKilled++
+            this.checkLevelUp()
         }
     }
 
     /**
+     * 检查是否应该升级（基于敌人击败数量）
+     */
+    checkLevelUp() {
+        // 计算当前等级需要击败的敌人总数
+        const requiredEnemiesForCurrentLevel = this.calculateRequiredEnemies(this.level)
+        
+        if (this.enemiesKilled >= requiredEnemiesForCurrentLevel) {
+            this.levelUp(this.level + 1)
+        }
+    }
+
+    /**
+     * 计算指定等级需要击败的敌人总数
+     */
+    calculateRequiredEnemies(level) {
+        let totalRequired = 0
+        for (let i = 1; i < level; i++) {
+            const baseEnemies = SCORING_CONFIG.ENEMIES_PER_LEVEL
+            const additionalEnemies = (i - 1) * SCORING_CONFIG.LEVEL_DIFFICULTY_INCREASE
+            totalRequired += baseEnemies + additionalEnemies
+        }
+        return totalRequired
+    }    /**
      * 升级
      */
     levelUp(newLevel) {
@@ -353,7 +360,10 @@ export default class GameScene extends Phaser.Scene {
         this.enemySpawnManager.updateSpawnRate()
         this.powerUpSpawnManager.adjustSpawnRate()
         
-        console.log(`🎉 升级到等级 ${this.level}!`)
+        // 计算下一等级需要击败的敌人数
+        const nextLevelEnemies = this.calculateRequiredEnemies(this.level + 1) - this.enemiesKilled
+        
+        console.log(`🎉 升级到等级 ${this.level}! 下一级还需击败 ${nextLevelEnemies} 个敌人`)
     }
 
     /**

@@ -46,8 +46,12 @@ export const POWERUP_CONFIG = {
 // 分数和等级配置
 export const SCORING_CONFIG = {
     ENEMY_KILL_POINTS: 10,
-    LEVEL_UP_THRESHOLD: 1000,  // 每1000分升级
-    COMBO_MULTIPLIER: 1.5      // 连击倍数
+    LEVEL_UP_THRESHOLD: 1000,  // 每1000分升级（保留作为备用）
+    COMBO_MULTIPLIER: 1.5,     // 连击倍数
+    
+    // 新的基于敌人数量的升级系统
+    ENEMIES_PER_LEVEL: 10,     // 每击败10个敌人升级
+    LEVEL_DIFFICULTY_INCREASE: 2  // 每级增加需要击败的敌人数
 }
 
 // 视觉效果配置

@@ -58,14 +58,14 @@ export default class Player extends Phaser.GameObjects.Sprite {
             this.fire()
             this.lastFired = currentTime
         }
-    }fire() {
+    }    fire() {
         // 在玩家位置上方发射子弹
         console.log(`💥 调用fireBullet - 玩家位置: (${this.x}, ${this.y})`)
         
         if (this.isMultiShotActive()) {
             // 散射效果：发射5发子弹，30度角度范围
-            const baseAngle = -90 // 向上射击（-90度）
-            const spreadAngle = 30 // 总散射角度
+            const baseAngle = -Math.PI / 2 // 向上射击（-90度，转换为弧度）
+            const spreadAngle = Math.PI / 6 // 30度转换为弧度
             const bulletCount = 5
             
             for (let i = 0; i < bulletCount; i++) {

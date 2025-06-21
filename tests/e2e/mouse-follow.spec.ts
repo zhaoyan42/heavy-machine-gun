@@ -66,13 +66,12 @@ test.describe('鼠标跟随测试', () => {
           const game = (window as any).game
           const scene = game.scene.getScene('GameScene')
           const player = scene.player
-          return {
-            x: player.x,
+          return {            x: player.x,
             y: player.y,
             targetX: player.targetX,
             totalMovement: Math.abs(player.x - initialX)
           }
-        }, initialPlayerState.x)
+        })
 
         console.log('🏁 最终玩家状态:', finalPlayerState)
         
