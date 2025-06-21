@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('飞机视觉效果测试', () => {
     test('验证自定义飞机纹理显示', async ({ page }) => {
-        await page.goto('http://localhost:3010/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏初始化
         await page.waitForSelector('canvas', { timeout: 10000 })
@@ -51,7 +51,7 @@ test.describe('飞机视觉效果测试', () => {
     })
     
     test('验证飞机移动和控制', async ({ page }) => {
-        await page.goto('http://localhost:3010/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         
@@ -87,7 +87,7 @@ test.describe('飞机视觉效果测试', () => {
     })
     
     test('截图验证飞机外观', async ({ page }) => {
-        await page.goto('http://localhost:3010/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(2000)
         

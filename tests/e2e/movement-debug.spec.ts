@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('玩家移动调试', () => {
   test('详细诊断玩家移动逻辑', async ({ page }) => {
     // 启动游戏
-    await page.goto('http://localhost:3000')
+    await page.goto('/')
     await page.waitForTimeout(3000)
 
     // 检查游戏状态

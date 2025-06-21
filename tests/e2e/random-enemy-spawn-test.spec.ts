@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('随机敌人生成系统测试', () => {    test('验证敌人生成的随机性', async ({ page }) => {
-        await page.goto('http://localhost:3011/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏初始化
         await page.waitForSelector('canvas', { timeout: 10000 })
@@ -84,7 +84,7 @@ test.describe('随机敌人生成系统测试', () => {    test('验证敌人生
         }
     })
       test('验证敌人属性的随机变化', async ({ page }) => {
-        await page.goto('http://localhost:3011/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         
@@ -146,7 +146,7 @@ test.describe('随机敌人生成系统测试', () => {    test('验证敌人生
         console.log('✅ X位置分布:', xPositions)
     })
       test('验证等级提升对随机系统的影响', async ({ page }) => {
-        await page.goto('http://localhost:3011/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         

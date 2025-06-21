@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('鼠标跟随测试', () => {
   test('鼠标移动跟随功能', async ({ page }) => {
-    await page.goto('http://localhost:3000')
+    await page.goto('/')
     await page.waitForTimeout(3000)
 
     const canvas = await page.$('canvas')
@@ -84,7 +84,7 @@ test.describe('鼠标跟随测试', () => {
   })
 
   test('触屏和鼠标兼容性测试', async ({ page }) => {
-    await page.goto('http://localhost:3000')
+    await page.goto('/')
     await page.waitForTimeout(3000)
 
     const canvas = await page.$('canvas')

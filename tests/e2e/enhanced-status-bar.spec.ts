@@ -7,7 +7,7 @@ import { test } from '@playwright/test'
 test.describe('增强状态栏测试', () => {
     
     test('验证新的Player属性显示', async ({ page }) => {
-        await page.goto('http://localhost:3004/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForSelector('canvas', { timeout: 10000 })

@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:3000/heavy-machine-gun/';
-
 test.describe('重机枪游戏详细诊断', () => {
   test('游戏完整功能诊断', async ({ page }) => {
     // 监听控制台错误
@@ -20,7 +18,7 @@ test.describe('重机枪游戏详细诊断', () => {
       }
     });
 
-    await page.goto(BASE_URL);
+    await page.goto('/');
     
     // 等待页面完全加载
     await page.waitForLoadState('networkidle');

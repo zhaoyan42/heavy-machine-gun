@@ -1,10 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:3000/heavy-machine-gun/';
-
 test.describe('游戏交互和战斗系统诊断', () => {
   test('控制系统和敌人击败诊断', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
 

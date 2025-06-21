@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('道具频率快速验证', () => {
     test('基本道具生成测试', async ({ page }) => {
-        await page.goto('http://localhost:3007/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(2000)
         
@@ -68,7 +68,7 @@ test.describe('道具频率快速验证', () => {
     })
     
     test('验证道具生成频率提升', async ({ page }) => {
-        await page.goto('http://localhost:3007/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(2000)
         

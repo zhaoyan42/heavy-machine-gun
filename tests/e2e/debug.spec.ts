@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:3000/heavy-machine-gun/';
-
 test('游戏启动调试', async ({ page }) => {
   // 收集所有控制台输出
   const consoleMessages: string[] = [];
@@ -15,7 +13,7 @@ test('游戏启动调试', async ({ page }) => {
     errors.push(error.message);
   });
 
-  await page.goto(BASE_URL);
+  await page.goto('/');
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(5000); // 等待5秒让游戏完全加载
 

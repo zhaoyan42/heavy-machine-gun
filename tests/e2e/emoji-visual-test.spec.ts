@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Emoji视觉效果验证', () => {
     test('验证游戏中emoji图标显示', async ({ page }) => {
-        await page.goto('http://localhost:3010/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏初始化
         await page.waitForSelector('canvas', { timeout: 10000 })

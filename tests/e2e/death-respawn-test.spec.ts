@@ -8,7 +8,7 @@ declare global {
 }
 
 test.describe('Player Death and Respawn System', () => {    test('player should respawn after death with reset enhancements', async ({ page }) => {
-        await page.goto('http://localhost:3001/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForTimeout(2000)
@@ -141,11 +141,11 @@ test.describe('Player Death and Respawn System', () => {    test('player should 
         
         console.log('无敌时间结束后状态:', isInvincibleAfterWait)
         expect(isInvincibleAfterWait).toBe(false)
-        
-        console.log('✅ 死亡重生测试通过!')
+          console.log('✅ 死亡重生测试通过!')
     })
-      test('player should die and show game over when no lives left', async ({ page }) => {
-        await page.goto('http://localhost:3001/heavy-machine-gun/')
+    
+    test('player should die and show game over when no lives left', async ({ page }) => {
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForTimeout(2000)

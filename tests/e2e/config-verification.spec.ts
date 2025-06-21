@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test'
 test('配置验证和简单游戏测试', async ({ page }) => {
     console.log('🔍 开始配置验证测试...')
     
-    await page.goto('http://localhost:3007/heavy-machine-gun/')
+    await page.goto('/')
     await page.waitForSelector('canvas', { timeout: 10000 })
     await page.waitForTimeout(2000)
     

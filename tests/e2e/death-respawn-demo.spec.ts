@@ -8,7 +8,7 @@ declare global {
 }
 
 test('Demo: Death and Respawn System with Visual Effects', async ({ page }) => {
-    await page.goto('http://localhost:3001/heavy-machine-gun/')
+    await page.goto('/')
     
     // 等待游戏加载
     await page.waitForTimeout(2000)

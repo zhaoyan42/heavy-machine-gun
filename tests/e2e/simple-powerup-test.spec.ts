@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('道具频率简单测试', () => {
     test('验证道具生成系统基本功能', async ({ page }) => {
         // 访问游戏页面
-        await page.goto('http://localhost:3007/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForSelector('canvas', { timeout: 10000 })
@@ -79,7 +79,7 @@ test.describe('道具频率简单测试', () => {
     })
     
     test('验证高等级时的道具配置变化', async ({ page }) => {
-        await page.goto('http://localhost:3007/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(2000)
         
@@ -145,7 +145,7 @@ test.describe('道具频率简单测试', () => {
     })
     
     test('验证紧急状态道具增强', async ({ page }) => {
-        await page.goto('http://localhost:3007/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(2000)
         

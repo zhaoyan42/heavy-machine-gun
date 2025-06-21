@@ -25,7 +25,7 @@ test.describe('事件系统修复测试', () => {
         })
 
         // 访问游戏页面
-        await page.goto('http://localhost:3008/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏初始化
         await page.waitForTimeout(2000)
@@ -54,7 +54,7 @@ test.describe('事件系统修复测试', () => {
     })
     
     test('应该能正常监听道具生成事件', async ({ page }) => {
-        await page.goto('http://localhost:3008/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForTimeout(1000)
         
         // 检查事件监听器是否正确设置

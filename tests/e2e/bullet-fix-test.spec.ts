@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('射击系统测试', () => {
     test('验证每次只发射一颗子弹（非散射模式）', async ({ page }) => {
-        await page.goto('http://localhost:5173')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForSelector('canvas', { timeout: 10000 })
@@ -47,7 +47,7 @@ test.describe('射击系统测试', () => {
     })
     
     test('验证子弹实际生成数量', async ({ page }) => {
-        await page.goto('http://localhost:5173')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         
         // 等待游戏稳定
@@ -80,7 +80,7 @@ test.describe('射击系统测试', () => {
     })
     
     test('检查散射模式下的子弹数量', async ({ page }) => {
-        await page.goto('http://localhost:5173')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         

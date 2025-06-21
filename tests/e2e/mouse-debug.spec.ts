@@ -9,7 +9,7 @@ test('鼠标移动调试', async ({ page }) => {
     }
   })
 
-  await page.goto('http://localhost:3000/heavy-machine-gun/')
+  await page.goto('/')
   await page.waitForTimeout(3000)
 
   const canvas = await page.$('canvas')

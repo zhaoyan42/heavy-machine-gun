@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('屏幕闪烁修复测试', () => {
   test('快速击败多个敌人时屏幕不应剧烈闪烁', async ({ page }) => {
-    await page.goto('http://localhost:3000/heavy-machine-gun/')
+    await page.goto('/')
     await page.waitForTimeout(3000)
 
     const canvas = await page.$('canvas')
@@ -75,7 +75,7 @@ test.describe('屏幕闪烁修复测试', () => {
   })
 
   test('单个敌人击败应有适度视觉反馈', async ({ page }) => {
-    await page.goto('http://localhost:3000/heavy-machine-gun/')
+    await page.goto('/')
     await page.waitForTimeout(3000)
 
     const canvas = await page.$('canvas')

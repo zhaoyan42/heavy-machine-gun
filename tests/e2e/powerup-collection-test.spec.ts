@@ -17,7 +17,7 @@ test.describe('道具收集测试', () => {
         })
 
         // 访问游戏页面
-        await page.goto('http://localhost:3001/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForTimeout(2000)
@@ -64,7 +64,7 @@ test.describe('道具收集测试', () => {
         })
 
         // 访问游戏页面
-        await page.goto('http://localhost:3001/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForTimeout(2000)

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('极轻微震动效果验证', () => {
   test('验证击败敌人时的震动效果极其柔和', async ({ page }) => {
     // 启动游戏
-    await page.goto('http://localhost:5173')
+    await page.goto('/')
     
     // 等待游戏加载
     await page.waitForFunction(() => window.gameScene && window.gameScene.isGameRunning, {
@@ -103,7 +103,7 @@ test.describe('极轻微震动效果验证', () => {
   
   test('验证连续击败敌人时震动不会累积', async ({ page }) => {
     // 启动游戏
-    await page.goto('http://localhost:5173')
+    await page.goto('/')
     
     await page.waitForFunction(() => window.gameScene && window.gameScene.isGameRunning, {
       timeout: 10000

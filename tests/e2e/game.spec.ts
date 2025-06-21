@@ -1,13 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 // 使用开发服务器地址
-const BASE_URL = 'http://localhost:3000/heavy-machine-gun/';
-
 // 端到端基础测试：打开首页，检查画布和UI
 
-test.describe('重机枪游戏 E2E 基础测试', () => {
-  test('首页加载与主UI渲染', async ({ page }) => {
-    await page.goto(BASE_URL);
+test.describe('重机枪游戏 E2E 基础测试', () => {  test('首页加载与主UI渲染', async ({ page }) => {
+    await page.goto('/');
     
     // 等待页面完全加载
     await page.waitForLoadState('networkidle');
@@ -29,9 +26,8 @@ test.describe('重机枪游戏 E2E 基础测试', () => {
       return (window as any).consoleErrors || [];
     });
     expect(errors.length).toBe(0);
-  });
-  test('模拟点击移动', async ({ page }) => {
-    await page.goto(BASE_URL);
+  });  test('模拟点击移动', async ({ page }) => {
+    await page.goto('/');
     
     // 等待游戏加载完成
     await page.waitForLoadState('networkidle');
@@ -54,9 +50,8 @@ test.describe('重机枪游戏 E2E 基础测试', () => {
     // 检查游戏是否响应点击（可以通过检查 Canvas 变化或其他方式）
     expect(true).toBeTruthy();
   });
-
   test('游戏Canvas尺寸检查', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     
     const canvas = await page.$('canvas');

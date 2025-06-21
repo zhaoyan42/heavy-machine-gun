@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test('敌人属性调试', async ({ page }) => {
-  await page.goto('http://localhost:3000')
+  await page.goto('/')
   await page.waitForTimeout(3000)
 
   // 检查第一个敌人的属性

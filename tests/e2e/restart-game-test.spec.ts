@@ -6,7 +6,7 @@ test.describe('重新开始游戏功能测试', () => {
         console.log('🧪 开始测试游戏重新开始功能...');
         
         // 导航到游戏页面
-        await page.goto('http://localhost:3006/heavy-machine-gun/');
+        await page.goto('/');
         
         // 等待游戏加载
         await page.waitForTimeout(2000);
@@ -77,7 +77,7 @@ test.describe('重新开始游戏功能测试', () => {
         console.log('🧪 开始测试多重散射角度...');
         
         // 导航到游戏页面
-        await page.goto('http://localhost:3006/heavy-machine-gun/');
+        await page.goto('/');
         
         // 等待游戏加载
         await page.waitForTimeout(2000);
@@ -123,7 +123,7 @@ test.describe('重新开始游戏功能测试', () => {
         console.log('🧪 开始测试等级机制...');
         
         // 导航到游戏页面
-        await page.goto('http://localhost:3006/heavy-machine-gun/');
+        await page.goto('/');
         
         // 等待游戏加载
         await page.waitForTimeout(2000);

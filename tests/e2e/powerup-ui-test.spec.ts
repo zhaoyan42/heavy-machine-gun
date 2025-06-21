@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test'
 test.describe('道具和UI功能测试', () => {
     
     test('道具出现频率和提示显示测试', async ({ page }) => {
-        await page.goto('http://localhost:5173')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForSelector('canvas')
@@ -77,7 +77,7 @@ test.describe('道具和UI功能测试', () => {
     })
     
     test('UI状态栏检查', async ({ page }) => {
-        await page.goto('http://localhost:5173')
+        await page.goto('/')
         await page.waitForSelector('canvas')
         await page.waitForTimeout(1000)
         
@@ -120,7 +120,7 @@ test.describe('道具和UI功能测试', () => {
     })
     
     test('道具提示功能测试', async ({ page }) => {
-        await page.goto('http://localhost:5173')
+        await page.goto('/')
         await page.waitForSelector('canvas')
         await page.waitForTimeout(1000)
         

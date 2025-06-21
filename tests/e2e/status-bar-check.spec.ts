@@ -7,7 +7,7 @@ import { test } from '@playwright/test'
 test.describe('状态栏检查', () => {
     
     test('检查是否有重复的状态栏', async ({ page }) => {
-        await page.goto('http://localhost:3004/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForSelector('canvas', { timeout: 10000 })
@@ -85,7 +85,7 @@ test.describe('状态栏检查', () => {
     })
     
     test('检查Player的所有属性', async ({ page }) => {
-        await page.goto('http://localhost:3004/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(2000)
         

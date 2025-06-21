@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('永久增强道具系统测试', () => {    test('验证新道具类型配置和权重系统', async ({ page }) => {
-        await page.goto('http://localhost:3010/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏初始化
         await page.waitForSelector('canvas', { timeout: 10000 })
@@ -46,7 +46,7 @@ test.describe('永久增强道具系统测试', () => {    test('验证新道具
     })
     
     test('测试动态权重计算', async ({ page }) => {
-        await page.goto('http://localhost:3010/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         
@@ -112,7 +112,7 @@ test.describe('永久增强道具系统测试', () => {    test('验证新道具
         expect(typeof level1Weights).toBe('object')
         expect(typeof level10Weights).toBe('object')
     })
-      test('测试永久增强道具生成', async ({ page }) => {        await page.goto('http://localhost:3010/heavy-machine-gun/')
+      test('测试永久增强道具生成', async ({ page }) => {        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         
@@ -175,7 +175,7 @@ test.describe('永久增强道具系统测试', () => {    test('验证新道具
             console.log(`✅ ${result.type} 道具生成成功: 值=${result.value}, 纹理=${result.texture}`)
         })
     })
-      test('测试玩家永久增强效果', async ({ page }) => {        await page.goto('http://localhost:3010/heavy-machine-gun/')
+      test('测试玩家永久增强效果', async ({ page }) => {        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         
@@ -237,7 +237,7 @@ test.describe('永久增强道具系统测试', () => {    test('验证新道具
             console.log(`✅ ${result.type} 永久增强成功: ${result.original} → ${result.enhanced} (提升${result.improvement})`)
         })
     })
-      test('验证道具类型多样性', async ({ page }) => {        await page.goto('http://localhost:3010/heavy-machine-gun/')
+      test('验证道具类型多样性', async ({ page }) => {        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(1000)
         

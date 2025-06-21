@@ -9,7 +9,7 @@ test.describe('游戏场景检查', () => {    test('检查gameScene是否正确
         page.on('console', msg => console.log('浏览器控制台:', msg.text()))
         page.on('pageerror', error => console.error('页面错误:', error.message))
         
-        await page.goto('http://localhost:3009/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏初始化
         await page.waitForSelector('canvas', { timeout: 10000 })

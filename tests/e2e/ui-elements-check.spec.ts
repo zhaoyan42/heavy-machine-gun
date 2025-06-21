@@ -8,7 +8,7 @@ import { test } from '@playwright/test'
 test.describe('UI元素详细检查', () => {
     
     test('检查左上角UI元素', async ({ page }) => {
-        await page.goto('http://localhost:3004/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForSelector('canvas', { timeout: 10000 })
@@ -133,7 +133,7 @@ test.describe('UI元素详细检查', () => {
     })
     
     test('检查是否有隐藏或透明的UI元素', async ({ page }) => {
-        await page.goto('http://localhost:3004/heavy-machine-gun/')
+        await page.goto('/')
         await page.waitForSelector('canvas', { timeout: 10000 })
         await page.waitForTimeout(2000)
         

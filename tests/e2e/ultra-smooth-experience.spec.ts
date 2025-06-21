@@ -9,7 +9,7 @@ test('极其柔和的震动体验测试', async ({ page }) => {
     console.log('开始极其柔和的震动体验测试...')
     
     // 导航到游戏页面
-    await page.goto('http://localhost:5173')
+    await page.goto('/')
     
     // 等待游戏加载
     await page.waitForTimeout(2000)
@@ -116,7 +116,7 @@ test('极其柔和的震动体验测试', async ({ page }) => {
 test('验证震动参数设置', async ({ page }) => {
     console.log('验证震动参数设置...')
     
-    await page.goto('http://localhost:5173')
+    await page.goto('/')
     await page.waitForTimeout(1000)
     
     // 检查震动配置参数

@@ -8,7 +8,7 @@ import { test } from '@playwright/test'
 test.describe('快速UI检查', () => {
     
     test('验证道具功能和UI状态', async ({ page }) => {
-        await page.goto('http://localhost:3004/heavy-machine-gun/')
+        await page.goto('/')
         
         // 等待游戏加载
         await page.waitForSelector('canvas', { timeout: 10000 })

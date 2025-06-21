@@ -6,7 +6,7 @@ test.describe('鼠标跟随测试', () => {
     console.log('🧪 开始测试鼠标跟随功能...')
     
     // 导航到游戏页面
-    await page.goto('http://localhost:5173')
+    await page.goto('/')
     
     // 等待游戏加载
     await page.waitForTimeout(2000)
@@ -64,7 +64,7 @@ test.describe('鼠标跟随测试', () => {
     console.log('🧪 开始测试点击移动功能...')
     
     // 导航到游戏页面
-    await page.goto('http://localhost:5173')
+    await page.goto('/')
     
     // 等待游戏加载
     await page.waitForTimeout(2000)
