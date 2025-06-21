@@ -8,11 +8,14 @@ import { GAME_CONFIG } from '../config/GameConfig.js'
 export default class UIManager {
     constructor(scene) {
         this.scene = scene
-        
-        // UI元素
+          // UI元素
         this.scoreText = null
         this.livesText = null
         this.levelText = null
+        this.speedText = null        // 新增：移动速度显示
+        this.fireRateText = null     // 新增：射击速度显示
+        this.multiShotText = null    // 新增：多重射击状态显示
+        this.shieldText = null       // 新增：护盾状态显示
         this.gameOverText = null
         this.restartText = null
         this.debugText = null
@@ -26,9 +29,7 @@ export default class UIManager {
     createUI() {
         this.createGameUI()
         this.createDebugUI()
-    }
-
-    /**
+    }    /**
      * 创建游戏主界面UI
      */
     createGameUI() {
@@ -61,18 +62,58 @@ export default class UIManager {
             strokeThickness: 2
         })
         this.levelText.setScrollFactor(0)
-    }
 
-    /**
+        // 移动速度显示
+        this.speedText = this.scene.add.text(16, 118, '速度: 300', {
+            fontSize: '20px',
+            color: '#00ff88',
+            fontFamily: 'Arial, sans-serif',
+            stroke: '#000000',
+            strokeThickness: 2
+        })
+        this.speedText.setScrollFactor(0)
+
+        // 射击速度显示
+        this.fireRateText = this.scene.add.text(16, 148, '射击: 200ms', {
+            fontSize: '20px',
+            color: '#ff8800',
+            fontFamily: 'Arial, sans-serif',
+            stroke: '#000000',
+            strokeThickness: 2
+        })
+        this.fireRateText.setScrollFactor(0)
+
+        // 多重射击状态显示
+        this.multiShotText = this.scene.add.text(16, 178, '', {
+            fontSize: '18px',
+            color: '#ff00ff',
+            fontFamily: 'Arial, sans-serif',
+            stroke: '#000000',
+            strokeThickness: 2
+        })
+        this.multiShotText.setScrollFactor(0)
+
+        // 护盾状态显示
+        this.shieldText = this.scene.add.text(16, 208, '', {
+            fontSize: '18px',
+            color: '#00ffff',
+            fontFamily: 'Arial, sans-serif',
+            stroke: '#000000',
+            strokeThickness: 2
+        })
+        this.shieldText.setScrollFactor(0)
+    }    /**
      * 创建调试UI
      */
     createDebugUI() {
+        // 隐藏调试信息，不再显示第二个状态栏
         this.debugText = this.scene.add.text(16, GAME_CONFIG.HEIGHT - 100, '', {
             fontSize: '16px',
             color: '#00ff00',
             fontFamily: 'Arial, sans-serif'
         })
         this.debugText.setScrollFactor(0)
+        this.debugText.setVisible(false) // 隐藏调试信息
     }
 
     /**
@@ -250,12 +291,98 @@ export default class UIManager {
     }
 
     /**
+     * 更新玩家速度显示
+     */
+    updateSpeed(speed) {
+        if (this.speedText) {
+            this.speedText.setText(`速度: ${speed}`)
+        }
+    }
+
+    /**
+     * 更新射击速度显示
+     */
+    updateFireRate(fireRate) {
+        if (this.fireRateText) {
+            this.fireRateText.setText(`射击: ${fireRate}ms`)
+        }
+    }
+
+    /**
+     * 更新多重射击状态显示
+     */
+    updateMultiShotStatus(isActive, remainingTime = 0) {
+        if (this.multiShotText) {
+            if (isActive) {
+                const seconds = Math.ceil(remainingTime / 1000)
+                this.multiShotText.setText(`🎯 多重射击: ${seconds}s`)
+                this.multiShotText.setVisible(true)
+            } else {
+                this.multiShotText.setText('')
+                this.multiShotText.setVisible(false)
+            }
+        }
+    }
+
+    /**
+     * 更新护盾状态显示
+     */
+    updateShieldStatus(isActive, remainingTime = 0) {
+        if (this.shieldText) {
+            if (isActive) {
+                const seconds = Math.ceil(remainingTime / 1000)
+                this.shieldText.setText(`🛡️ 护盾: ${seconds}s`)
+                this.shieldText.setVisible(true)
+            } else {
+                this.shieldText.setText('')
+                this.shieldText.setVisible(false)
+            }
+        }
+    }
+
+    /**
+     * 更新所有Player相关的UI显示
+     */
+    updatePlayerStatus(player, scene) {
+        if (!player) return
+        
+        // 更新基础属性
+        this.updateSpeed(player.speed)
+        this.updateFireRate(player.fireRate)
+        
+        // 更新道具状态
+        const currentTime = scene.time.now
+        
+        // 多重射击状态
+        if (player.multiShot) {
+            const remainingTime = Math.max(0, 
+                player.multiShotDuration - (currentTime - player.multiShotStartTime)
+            )
+            this.updateMultiShotStatus(true, remainingTime)
+        } else {
+            this.updateMultiShotStatus(false)
+        }
+        
+        // 护盾状态
+        if (player.shieldActive) {
+            const remainingTime = Math.max(0, 
+                player.shieldDuration - (currentTime - player.shieldStartTime)
+            )
+            this.updateShieldStatus(true, remainingTime)
+        } else {
+            this.updateShieldStatus(false)
+        }
+    }    /**
      * 销毁所有UI元素
      */
     destroy() {
         if (this.scoreText) this.scoreText.destroy()
         if (this.livesText) this.livesText.destroy()
         if (this.levelText) this.levelText.destroy()
+        if (this.speedText) this.speedText.destroy()
+        if (this.fireRateText) this.fireRateText.destroy()
+        if (this.multiShotText) this.multiShotText.destroy()
+        if (this.shieldText) this.shieldText.destroy()
         if (this.gameOverText) this.gameOverText.destroy()
         if (this.restartText) this.restartText.destroy()
         if (this.debugText) this.debugText.destroy()

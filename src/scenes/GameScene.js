@@ -302,13 +302,14 @@ export default class GameScene extends Phaser.Scene {
                 enemy.destroy()
             }
         })
-    }
-
-    /**
+    }    /**
      * 更新管理器
      */
     updateManagers() {
-        // 这里可以添加需要每帧更新的管理器逻辑
+        // 更新Player状态显示
+        if (this.uiManager && this.player) {
+            this.uiManager.updatePlayerStatus(this.player, this)
+        }
     }
 
     /**
