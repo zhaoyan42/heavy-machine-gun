@@ -70,6 +70,16 @@ export default class GameScene extends Phaser.Scene {
         this.startGameLoop()
         
         console.log('✅ 游戏场景创建完成')
+          // 暴露到全局作为调试接口
+        window.gameScene = this
+        window.gameDebugLogs = window.gameDebugLogs || []
+        
+        // 监控道具生成（使用Phaser的事件系统）
+        this.events.on('powerUpSpawned', (type, x, y, value, level) => {
+            const logMessage = `✨ 生成道具: ${type} 位置:(${x}, ${y}) 值:${value} 等级:${level}`
+            console.log(logMessage)
+            window.gameDebugLogs.push(logMessage)
+        })
     }
 
     /**

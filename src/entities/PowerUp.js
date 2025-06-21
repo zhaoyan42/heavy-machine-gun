@@ -1,8 +1,11 @@
 import Phaser from 'phaser'
 
-export default class PowerUp extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y, type = null) {
-        super(scene, x, y, 'powerup')
+export default class PowerUp extends Phaser.Physics.Arcade.Sprite {    constructor(scene, x, y, type = null, value = null) {
+        // 先确定类型，再调用super
+        const powerUpType = type || 'multiShot' // 默认类型
+        const textureKey = `powerup-${powerUpType}`
+        
+        super(scene, x, y, textureKey)
         
         // 添加到场景和物理系统
         scene.add.existing(this)
@@ -13,7 +16,8 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {
         
         // 道具属性
         this.speed = 80
-        this.type = type || this.getRandomType()
+        this.type = powerUpType
+        this.value = value || this.getDefaultValue() // 新增value属性
         this.points = 50
         
         // 设置初始速度（向下移动）
@@ -49,6 +53,21 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {
     getRandomType() {
         const types = ['speed', 'firerate', 'multishot', 'points']
         return Phaser.Utils.Array.GetRandom(types)
+    }
+    
+    getDefaultValue() {
+        switch (this.type) {
+            case 'multiShot':
+                return 5000  // 默认5秒
+            case 'shield':
+                return 8000  // 默认8秒
+            case 'extraPoints':
+                return 50    // 默认50分
+            case 'extraLife':
+                return 1     // 默认1条命
+            default:
+                return 0
+        }
     }
     
     setupPowerUpType() {

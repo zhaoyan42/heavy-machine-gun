@@ -32,15 +32,27 @@ export const ENEMY_CONFIG = {
 
 // 道具配置
 export const POWERUP_CONFIG = {
-    SPAWN_CHANCE: 0.25,     // 生成概率 (从0.1提升到0.25，增加150%)
-    SPAWN_DELAY: 8000,      // 生成间隔(毫秒) (从15秒减少到8秒)
-    FALL_SPEED: 150,        // 下落速度
+    BASE_SPAWN_CHANCE: 0.4,         // 基础生成概率 (40%) - 大幅提升
+    SPAWN_CHANCE_INCREASE: 0.06,    // 每级增加的生成概率 (6%) - 提升增长速度
+    MAX_SPAWN_CHANCE: 0.85,         // 最大生成概率 (85%) - 提升上限
+      BASE_SPAWN_DELAY: 5000,         // 基础生成间隔(毫秒) - 从8秒减少到5秒
+    SPAWN_DELAY_DECREASE: 500,      // 每级减少的生成间隔(毫秒)
+    MIN_SPAWN_DELAY: 1200,          // 最小生成间隔(毫秒) - 从1.5秒减少到1.2秒
     
-    // 各种道具效果持续时间
-    MULTI_SHOT_DURATION: 5000,    // 多重射击持续时间
-    SHIELD_DURATION: 8000,        // 护盾持续时间
-    EXTRA_POINTS_VALUE: 50,       // 额外分数
-    EXTRA_LIFE_VALUE: 1           // 额外生命
+    FALL_SPEED: 150,                // 下落速度
+      // 各种道具效果持续时间
+    MULTI_SHOT_DURATION: 5000,     // 多重射击持续时间
+    SHIELD_DURATION: 8000,         // 护盾持续时间
+    EXTRA_POINTS_VALUE: 50,        // 额外分数
+    EXTRA_LIFE_VALUE: 1,           // 额外生命
+    
+    // 高等级道具增强配置
+    LEVEL_DURATION_BONUS: 300,     // 每级增加的持续时间(毫秒)
+    MAX_DURATION_BONUS: 3000,      // 最大额外持续时间(毫秒)
+    HIGH_LEVEL_POINTS_BONUS: 10,   // 高等级时额外分数奖励(每级)
+    
+    // 难度相关的道具权重调整
+    DIFFICULTY_BONUS_MULTIPLIER: 1.3  // 高难度时道具效果增强倍数
 }
 
 // 分数和等级配置

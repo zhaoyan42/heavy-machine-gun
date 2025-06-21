@@ -61,17 +61,19 @@ test.describe('鼠标跟随测试', () => {
           expect(Math.abs(playerState.targetX - initialPlayerState.targetX)).toBeGreaterThan(10)
         }
 
-        // 测试最终移动效果
-        await page.waitForTimeout(2000) // 等待移动完成        const finalPlayerState = await page.evaluate((initialX) => {
+        // 测试最终移动效果        await page.waitForTimeout(2000) // 等待移动完成
+        
+        const finalPlayerState = await page.evaluate((initialX) => {
           const game = (window as any).game
           const scene = game.scene.getScene('GameScene')
           const player = scene.player
-          return {            x: player.x,
+          return {
+            x: player.x,
             y: player.y,
             targetX: player.targetX,
             totalMovement: Math.abs(player.x - initialX)
           }
-        })
+        }, initialPlayerState.x)
 
         console.log('🏁 最终玩家状态:', finalPlayerState)
         
