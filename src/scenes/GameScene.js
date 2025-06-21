@@ -141,11 +141,11 @@ export default class GameScene extends Phaser.Scene {
         // 注释：玩家射击现在由Player.js的handleShooting()方法处理
         // 移除了重复的定时器射击逻辑，避免双重射击问题
     }    /**
-     * 创建emoji图标纹理
+     * 创建游戏图标纹理
      */
     createColorGraphics() {
-        // 玩家 - 飞机emoji
-        this.createEmojiTexture('🚁', 'player', 30, 30)
+        // 玩家 - 自定义绘制的飞机
+        this.createPlayerTexture()
         
         // 敌人 - 外星人emoji  
         this.createEmojiTexture('👾', 'enemy', 25, 25)
@@ -450,5 +450,67 @@ export default class GameScene extends Phaser.Scene {
         if (this.effectsManager) this.effectsManager.destroy()
         
         super.destroy()
+    }
+
+    /**
+     * 创建玩家飞机纹理
+     */
+    createPlayerTexture() {
+        const width = 30
+        const height = 30
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        
+        // 清除画布
+        ctx.clearRect(0, 0, width, height)
+        
+        // 绘制飞机主体 - 蓝色
+        ctx.fillStyle = '#4A90E2'
+        ctx.beginPath()
+        // 机身（中央垂直部分）
+        ctx.fillRect(13, 8, 4, 16)
+        
+        // 绘制机翼 - 浅蓝色
+        ctx.fillStyle = '#7BB3F0'
+        // 上机翼
+        ctx.fillRect(8, 12, 14, 3)
+        // 下机翼（较小）
+        ctx.fillRect(10, 18, 10, 2)
+        
+        // 绘制机头 - 深蓝色
+        ctx.fillStyle = '#2E5C8A'
+        ctx.beginPath()
+        ctx.moveTo(15, 8)  // 机头顶点
+        ctx.lineTo(12, 12) // 左侧
+        ctx.lineTo(18, 12) // 右侧
+        ctx.closePath()
+        ctx.fill()
+        
+        // 绘制机尾 - 深蓝色
+        ctx.fillStyle = '#2E5C8A'
+        // 尾翼
+        ctx.fillRect(11, 24, 8, 2)
+        // 垂直尾翼
+        ctx.fillRect(14, 22, 2, 4)
+        
+        // 绘制驾驶舱 - 白色高光
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(14, 10, 2, 3)
+        
+        // 绘制引擎喷射效果 - 橙红色
+        ctx.fillStyle = '#FF6B35'
+        ctx.fillRect(13, 26, 4, 2)
+        ctx.fillStyle = '#FF8C69'
+        ctx.fillRect(14, 28, 2, 1)
+        
+        // 添加边框效果
+        ctx.strokeStyle = '#1F4788'
+        ctx.lineWidth = 1
+        ctx.strokeRect(13, 8, 4, 16) // 机身边框
+        
+        // 将canvas转换为Phaser纹理
+        this.textures.addCanvas('player', canvas)
     }
 }
