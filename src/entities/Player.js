@@ -1,7 +1,6 @@
 import Phaser from 'phaser'
 
-export default class Player extends Phaser.GameObjects.Sprite {
-    constructor(scene, x, y) {
+export default class Player extends Phaser.GameObjects.Sprite {    constructor(scene, x, y) {
         super(scene, x, y, 'player')
         
         // 添加到场景（不使用物理系统）
@@ -12,6 +11,10 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.targetX = x
         this.fireRate = 200 // 射击间隔（毫秒）
         this.lastFired = 0
+        
+        // 重生和无敌状态
+        this.isRespawning = false
+        this.isInvincible = false
         
         console.log('👤 玩家创建成功')
     }
@@ -27,8 +30,12 @@ export default class Player extends Phaser.GameObjects.Sprite {
         // 检查时间效果
         this.isMultiShotActive()
         this.isShieldActive()
-    }
-      handleMovement() {
+    }    handleMovement() {
+        // 如果玩家正在重生，不处理移动
+        if (this.isRespawning) {
+            return
+        }
+        
         // 键盘控制
         if (this.scene.cursors.left.isDown) {
             this.x -= this.speed * (1/60) // 基于帧率的移动
@@ -46,9 +53,9 @@ export default class Player extends Phaser.GameObjects.Sprite {
         
         // 限制在屏幕范围内
         this.x = Phaser.Math.Clamp(this.x, 20, this.scene.cameras.main.width - 20)
-    }    handleShooting(currentTime) {
-        // 检查游戏是否结束，如果结束则停止射击
-        if (this.scene.isGameOver) {
+    }handleShooting(currentTime) {
+        // 检查游戏是否结束，或玩家是否正在重生，如果是则停止射击
+        if (this.scene.isGameOver || this.isRespawning) {
             return
         }
         
@@ -58,7 +65,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
             this.fire()
             this.lastFired = currentTime
         }
-    }    fire() {
+    }fire() {
         // 在玩家位置上方发射子弹
         console.log(`💥 调用fireBullet - 玩家位置: (${this.x}, ${this.y})`)
         
@@ -224,5 +231,29 @@ export default class Player extends Phaser.GameObjects.Sprite {
             default:
                 console.warn(`⚠️ 未知道具类型: ${type}`)
         }
+    }
+
+    /**
+     * 重置所有增强效果到初始状态
+     */
+    resetAllEnhancements() {
+        console.log('🔄 重置玩家所有增强效果')
+        
+        // 重置临时效果
+        this.multiShot = false
+        this.shieldActive = false
+        this.multiShotDuration = 0
+        this.shieldDuration = 0
+        this.multiShotStartTime = 0
+        this.shieldStartTime = 0
+        
+        // 清除视觉效果
+        this.clearTint()
+        
+        // 重置属性到初始值
+        this.speed = 300
+        this.fireRate = 200
+        
+        console.log('✅ 所有增强效果已重置到初始状态')
     }
 }

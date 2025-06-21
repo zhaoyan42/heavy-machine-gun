@@ -30,12 +30,15 @@ export default class CollisionManager {
                 }
             })
         })
-    }
-
-    /**
+    }    /**
      * 检查玩家与敌人的碰撞
      */
     checkPlayerEnemyCollisions() {
+        // 如果玩家正在重生或处于无敌状态，跳过碰撞检测
+        if (this.scene.player.isRespawning || this.scene.player.isInvincible) {
+            return
+        }
+        
         this.scene.enemies.children.entries.forEach(enemy => {
             const distance = this.getDistance(this.scene.player, enemy)
             

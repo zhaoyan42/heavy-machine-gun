@@ -375,9 +375,7 @@ export default class GameScene extends Phaser.Scene {
         const nextLevelEnemies = this.calculateRequiredEnemies(this.level + 1) - this.enemiesKilled
         
         console.log(`🎉 升级到等级 ${this.level}! 下一级还需击败 ${nextLevelEnemies} 个敌人`)
-    }
-
-    /**
+    }    /**
      * 失去生命
      */
     loseLife() {
@@ -386,6 +384,186 @@ export default class GameScene extends Phaser.Scene {
         
         if (this.lives <= 0) {
             this.gameOver()
+        } else {
+            // 如果还有生命，进行死亡重生流程
+            this.playerDeath()
+        }
+    }
+
+    /**
+     * 玩家死亡重生流程
+     */
+    playerDeath() {
+        if (!this.player || this.player.isRespawning) return
+        
+        console.log('💀 玩家死亡，准备重生...')
+        
+        // 标记玩家正在重生过程中
+        this.player.isRespawning = true
+        
+        // 重置所有增强效果
+        this.resetPlayerEnhancements()
+        
+        // 播放死亡动画效果
+        this.playDeathAnimation()
+        
+        // 隐藏玩家
+        this.player.setVisible(false)
+        this.player.setActive(false)
+        
+        // 3秒后重生
+        this.time.delayedCall(3000, () => {
+            this.respawnPlayer()
+        })
+    }    /**
+     * 重置玩家所有增强效果
+     */
+    resetPlayerEnhancements() {
+        if (!this.player) return
+        
+        console.log('🔄 重置所有玩家增强效果')
+        
+        // 使用Player类的重置方法
+        this.player.resetAllEnhancements()
+        
+        console.log('✅ 玩家增强效果已重置')
+    }
+
+    /**
+     * 播放死亡动画效果
+     */
+    playDeathAnimation() {
+        if (!this.player) return
+        
+        // 创建爆炸效果
+        this.createDeathEffect(this.player.x, this.player.y)
+        
+        // 屏幕震动效果
+        this.cameras.main.shake(500, 0.05)
+        
+        // 创建死亡文字提示
+        const deathText = this.add.text(
+            this.cameras.main.width / 2, 
+            this.cameras.main.height / 2, 
+            '💀 3秒后重生...', 
+            {
+                fontSize: '24px',
+                fill: '#ff0000',
+                fontWeight: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2,
+                align: 'center'
+            }
+        ).setOrigin(0.5)
+        
+        // 倒计时动画
+        let countdown = 3
+        const countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                countdown--
+                if (countdown > 0) {
+                    deathText.setText(`💀 ${countdown}秒后重生...`)
+                } else {
+                    deathText.setText('🌟 重生!')
+                    this.time.delayedCall(500, () => {
+                        deathText.destroy()
+                    })
+                }
+            },
+            repeat: 2
+        })
+        
+        // 文字闪烁效果
+        this.tweens.add({
+            targets: deathText,
+            alpha: 0.3,
+            duration: 500,
+            yoyo: true,
+            repeat: 5
+        })
+    }
+
+    /**
+     * 重生玩家
+     */
+    respawnPlayer() {
+        if (!this.player) return
+        
+        console.log('🌟 玩家重生!')
+        
+        // 重置玩家位置到屏幕底部中央
+        this.player.x = this.cameras.main.width / 2
+        this.player.y = this.cameras.main.height - 100
+        this.player.targetX = this.player.x
+        
+        // 显示玩家
+        this.player.setVisible(true)
+        this.player.setActive(true)
+        this.player.isRespawning = false
+        
+        // 重生闪烁效果（短暂无敌时间）
+        this.player.setAlpha(0.5)
+        this.tweens.add({
+            targets: this.player,
+            alpha: 1,
+            duration: 200,
+            yoyo: true,
+            repeat: 10,  // 2秒钟闪烁效果
+            onComplete: () => {
+                this.player.setAlpha(1)
+            }
+        })
+        
+        // 重生特效
+        this.createRespawnEffect(this.player.x, this.player.y)
+        
+        // 2秒无敌时间
+        this.player.isInvincible = true
+        this.time.delayedCall(2000, () => {
+            if (this.player) {
+                this.player.isInvincible = false
+                console.log('⚔️ 无敌时间结束')
+            }
+        })
+    }
+
+    /**
+     * 创建重生特效
+     */
+    createRespawnEffect(x, y) {
+        // 创建光环效果
+        const ring = this.add.circle(x, y, 5, 0x00ffff, 0.8)
+        
+        this.tweens.add({
+            targets: ring,
+            radius: 80,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power2',
+            onComplete: () => {
+                ring.destroy()
+            }
+        })
+        
+        // 创建星光粒子效果
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2
+            const star = this.add.text(x, y, '⭐', {
+                fontSize: '16px'
+            }).setOrigin(0.5)
+            
+            this.tweens.add({
+                targets: star,
+                x: x + Math.cos(angle) * 60,
+                y: y + Math.sin(angle) * 60,
+                alpha: 0,
+                duration: 800,
+                ease: 'Power2',
+                onComplete: () => {
+                    star.destroy()
+                }
+            })
         }
     }
 
