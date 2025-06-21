@@ -10,28 +10,31 @@ export default class EffectsManager {    constructor(scene) {
         this.lastFlashTime = 0      // 上次闪光时间
         this.flashInterval = 800    // 增加闪光间隔到800毫秒
         this.createEffectTextures()
-    }
-
-    /**
+    }    /**
      * 创建效果用的纹理
      */
     createEffectTextures() {
         // 创建粒子纹理
-        this.scene.add.graphics()
+        const particleGraphics = this.scene.add.graphics()
             .fillStyle(0xffffff)
             .fillCircle(4, 4, 4)
             .generateTexture('particle', 8, 8)
+        particleGraphics.destroy() // 生成纹理后销毁Graphics对象
 
         // 创建爆炸效果纹理
-        this.scene.add.graphics()
+        const explosionGraphics = this.scene.add.graphics()
             .fillStyle(0xff6600)
             .fillCircle(8, 8, 8)
-            .generateTexture('explosion', 16, 16)        // 创建收集效果纹理 - 改为绿色加号
-        this.scene.add.graphics()
+            .generateTexture('explosion', 16, 16)
+        explosionGraphics.destroy() // 生成纹理后销毁Graphics对象
+
+        // 创建收集效果纹理 - 改为绿色加号
+        const collectGraphics = this.scene.add.graphics()
             .fillStyle(0x00ff00)
             .fillRect(6, 2, 4, 12)
             .fillRect(2, 6, 12, 4)
             .generateTexture('collect', 16, 16)
+        collectGraphics.destroy() // 生成纹理后销毁Graphics对象
     }
 
     /**

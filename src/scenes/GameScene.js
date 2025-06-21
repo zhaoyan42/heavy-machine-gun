@@ -137,29 +137,30 @@ export default class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         })
-    }
-
-    /**
+    }    /**
      * 创建简单图形作为临时资源
      */
     createColorGraphics() {
         // 玩家 - 蓝色三角形
-        this.add.graphics()
+        const playerGraphics = this.add.graphics()
             .fillStyle(0x0088ff)
             .fillTriangle(15, 0, 0, 30, 30, 30)
             .generateTexture('player', 30, 30)
+        playerGraphics.destroy() // 生成纹理后销毁Graphics对象
 
         // 敌人 - 红色矩形
-        this.add.graphics()
+        const enemyGraphics = this.add.graphics()
             .fillStyle(0xff4444)
             .fillRect(0, 0, 25, 25)
             .generateTexture('enemy', 25, 25)
+        enemyGraphics.destroy() // 生成纹理后销毁Graphics对象
 
         // 子弹 - 黄色圆形
-        this.add.graphics()
+        const bulletGraphics = this.add.graphics()
             .fillStyle(0xffff44)
             .fillCircle(3, 3, 3)
             .generateTexture('bullet', 6, 6)
+        bulletGraphics.destroy() // 生成纹理后销毁Graphics对象
 
         // 道具纹理
         this.createPowerUpTextures()
@@ -168,31 +169,35 @@ export default class GameScene extends Phaser.Scene {
      */
     createPowerUpTextures() {
         // 多重射击道具 - 橙色菱形
-        this.add.graphics()
+        const multiShotGraphics = this.add.graphics()
             .fillStyle(0xff8800)
             .fillRect(10, 10, 10, 10)
             .fillTriangle(15, 5, 25, 15, 15, 25)
             .fillTriangle(15, 25, 5, 15, 15, 5)
             .generateTexture('powerup-multiShot', 30, 30)
+        multiShotGraphics.destroy() // 生成纹理后销毁Graphics对象
 
         // 护盾道具 - 青色圆形
-        this.add.graphics()
+        const shieldGraphics = this.add.graphics()
             .fillStyle(0x00ffff)
             .fillCircle(15, 15, 15)
             .generateTexture('powerup-shield', 30, 30)
+        shieldGraphics.destroy() // 生成纹理后销毁Graphics对象
 
         // 加分道具 - 金色钻石
-        this.add.graphics()
+        const extraPointsGraphics = this.add.graphics()
             .fillStyle(0xffdd00)
             .fillRect(5, 5, 20, 20)
             .generateTexture('powerup-extraPoints', 30, 30)
+        extraPointsGraphics.destroy() // 生成纹理后销毁Graphics对象
 
         // 生命道具 - 红色心形
-        this.add.graphics()
+        const extraLifeGraphics = this.add.graphics()
             .fillStyle(0xff0066)
             .fillEllipse(15, 15, 20, 15)
             .generateTexture('powerup-extraLife', 30, 30)
-    }    /**
+        extraLifeGraphics.destroy() // 生成纹理后销毁Graphics对象
+    }/**
      * 处理触屏/鼠标输入
      */
     handlePointerInput(pointer) {
