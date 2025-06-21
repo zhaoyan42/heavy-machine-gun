@@ -5,7 +5,14 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {    construct
         const powerUpType = type || 'multiShot' // 默认类型
         const textureKey = `powerup-${powerUpType}`
         
-        super(scene, x, y, textureKey)
+        // 检查纹理是否存在，如果不存在则使用默认纹理
+        let finalTextureKey = textureKey
+        if (!scene.textures.exists(textureKey)) {
+            console.warn(`⚠️ 纹理不存在: ${textureKey}, 使用默认纹理`)
+            finalTextureKey = 'powerup-multiShot' // 使用默认的多重射击纹理
+        }
+        
+        super(scene, x, y, finalTextureKey)
         
         // 添加到场景和物理系统
         scene.add.existing(this)
@@ -33,10 +40,8 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {    construct
         this.floatOffset = 0
         this.floatSpeed = 0.05
         
-        console.log(`✨ 道具生成: ${this.type}`)
-    }
-    
-    update() {
+        console.log(`✨ 道具生成: ${this.type}, 纹理: ${finalTextureKey}`)
+    }    update() {
         // 浮动效果
         this.floatOffset += this.floatSpeed
         this.y += Math.sin(this.floatOffset) * 0.5
@@ -73,8 +78,9 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {    construct
             default:
                 return 0
         }
-    }
-      setupPowerUpType() {
+    }    setupPowerUpType() {
+        // 只设置tint颜色，不创建额外的图标
+        // 图标已经通过emoji纹理在构造函数中设置了
         switch (this.type) {
             case 'speed':
                 this.setTint(0x00ff00) // 绿色 - 速度提升
@@ -106,10 +112,12 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {    construct
                 this.setTint(0x32cd32) // 酸橙绿 - 永久速度增强
                 break
             default:
-                this.setTint(0xff00ff) // 紫色 - 默认
+                this.setTint(0xffffff) // 白色 - 默认（不改变原有颜色）
         }
+        
+        console.log(`🎨 道具类型设置完成: ${this.type}`)
     }
-    
+      
     collect(player) {
         // 创建收集效果
         this.createCollectEffect()
@@ -120,7 +128,8 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {    construct
         // 销毁道具
         this.destroy()
     }
-      applyEffect(player) {
+      
+    applyEffect(player) {
         switch (this.type) {
             case 'speed':
                 if (player.increaseSpeed) {
@@ -214,6 +223,13 @@ export default class PowerUp extends Phaser.Physics.Arcade.Sprite {    construct
             onComplete: () => {
                 scoreText.destroy()
             }
-        })
+        })    }
+    
+    /**
+     * 销毁道具
+     */
+    destroy() {
+        // 调用父类的destroy方法
+        super.destroy()
     }
 }

@@ -101,21 +101,33 @@ export default class Player extends Phaser.GameObjects.Sprite {    constructor(s
         this.setTargetX(x)
     }    // 道具效果方法
     increaseFireRate() {
+        const oldFireRate = this.fireRate
         this.fireRate = Math.max(50, this.fireRate - 30)
+        const actualIncrease = oldFireRate - this.fireRate
         console.log(`🔥 射击速度提升！当前间隔: ${this.fireRate}ms`)
+        
+        // 返回实际增强值，用于判断是否达到上限
+        return actualIncrease
     }
     
     increaseSpeed() {
+        const oldSpeed = this.speed
         this.speed = Math.min(500, this.speed + 50)
+        const actualIncrease = this.speed - oldSpeed
         console.log(`⚡ 移动速度提升！当前速度: ${this.speed}`)
+        
+        // 返回实际增强值，用于判断是否达到上限
+        return actualIncrease
     }
-    
-    // 永久增强方法
+      // 永久增强方法
     permanentFireRateBoost(value) {
         const oldFireRate = this.fireRate
         this.fireRate = Math.max(50, this.fireRate - value) // 最小射击间隔50ms
         const actualIncrease = oldFireRate - this.fireRate
         console.log(`🔥⭐ 永久射速增强！减少${actualIncrease}ms射击间隔 (${oldFireRate}ms → ${this.fireRate}ms)`)
+        
+        // 返回实际增强值，用于判断是否达到上限
+        return actualIncrease
     }
     
     permanentSpeedBoost(value) {
@@ -123,21 +135,32 @@ export default class Player extends Phaser.GameObjects.Sprite {    constructor(s
         this.speed = Math.min(600, this.speed + value) // 最大移动速度600
         const actualIncrease = this.speed - oldSpeed
         console.log(`⚡⭐ 永久移动速度增强！增加${actualIncrease}速度 (${oldSpeed} → ${this.speed})`)
+        
+        // 返回实际增强值，用于判断是否达到上限
+        return actualIncrease
     }// 散射子弹效果
     enableMultiShot() {
+        let wasActive = this.multiShot
+        let extensionTime = 0
+        
         if (!this.multiShot) {
             // 只有当前没有散射效果时才激活
             this.multiShot = true
             this.multiShotDuration = 15000 // 增加到15秒持续时间
             this.multiShotStartTime = this.scene.time.now
             console.log(`🎯 五重散射激活！持续15秒`)
+            return { enhanced: true, extensionTime: 15000 }
         } else {
             // 如果已经有散射效果，延长持续时间
-            this.multiShotDuration += 8000 // 延长8秒
+            extensionTime = 8000
+            this.multiShotDuration += extensionTime // 延长8秒
             console.log(`🎯 五重散射效果延长！再延长8秒`)
+            return { enhanced: true, extensionTime: extensionTime }
         }
     }      // 护盾效果
     activateShield() {
+        let extensionTime = 0
+        
         if (!this.shieldActive) {
             // 只有当前没有护盾效果时才激活
             this.shieldActive = true
@@ -145,24 +168,26 @@ export default class Player extends Phaser.GameObjects.Sprite {    constructor(s
             this.shieldStartTime = this.scene.time.now
             this.setTint(0x00ffff) // 蓝色表示护盾
             console.log(`🛡️ 护盾激活！持续12秒`)
+            return { enhanced: true, extensionTime: 12000 }
         } else {
             // 如果已经有护盾效果，延长持续时间
-            this.shieldDuration += 6000 // 延长6秒
+            extensionTime = 6000
+            this.shieldDuration += extensionTime // 延长6秒
             console.log(`🛡️ 护盾效果延长！再延长6秒`)
+            return { enhanced: true, extensionTime: extensionTime }
         }
     }
-    
-    // 炸弹效果
+      // 炸弹效果
     activateBomb() {
         console.log(`💣 炸弹激活！清除所有敌人`)
         // 这个效果需要在GameScene中实现
-        return 'bomb'
+        return { type: 'bomb', value: 1 }
     }
-    
-    // 恢复生命
+      // 恢复生命
     restoreLife() {
         console.log(`❤️ 生命恢复！`)
-        return 'heal'
+        // 返回heal类型，让CollisionManager处理生命值增加
+        return { type: 'heal', value: 1 }
     }
       // 检查散射是否还有效
     isMultiShotActive() {
@@ -185,27 +210,40 @@ export default class Player extends Phaser.GameObjects.Sprite {    constructor(s
      * 激活道具效果
      * @param {string} type 道具类型
      * @param {number} value 道具数值（可选）
+     * @returns {object} 返回道具效果结果，包含是否增强成功和分数奖励
      */
     activatePowerUp(type, value = null) {
         console.log(`✨ 激活道具: ${type}`, value ? `值: ${value}` : '')
         
         switch (type) {
             case 'speed':
-                this.increaseSpeed()
-                break
+                const speedIncrease = this.increaseSpeed()
+                if (speedIncrease === 0) {
+                    // 速度已达上限，转为分数奖励
+                    const bonusPoints = 100
+                    console.log(`⚡ 速度已达上限！转为分数奖励: +${bonusPoints}`)
+                    return { enhanced: false, type: 'points', value: bonusPoints, reason: '速度已达上限' }
+                }
+                return { enhanced: true, actualValue: speedIncrease }
                 
             case 'firerate':
-                this.increaseFireRate()
-                break
+                const fireRateIncrease = this.increaseFireRate()
+                if (fireRateIncrease === 0) {
+                    // 射速已达上限，转为分数奖励
+                    const bonusPoints = 120
+                    console.log(`🔥 射速已达上限！转为分数奖励: +${bonusPoints}`)
+                    return { enhanced: false, type: 'points', value: bonusPoints, reason: '射速已达上限' }
+                }
+                return { enhanced: true, actualValue: fireRateIncrease }
                 
             case 'multishot':
             case 'multiShot':
-                this.enableMultiShot()
-                break
+                const multiShotResult = this.enableMultiShot()
+                return multiShotResult
                 
             case 'shield':
-                this.activateShield()
-                break
+                const shieldResult = this.activateShield()
+                return shieldResult
                 
             case 'bomb':
                 return this.activateBomb()
@@ -221,15 +259,28 @@ export default class Player extends Phaser.GameObjects.Sprite {    constructor(s
                 return { type: 'points', value: value || 100 }
                 
             case 'permanentFireRate':
-                this.permanentFireRateBoost(value || 20)
-                break
+                const permFireRateIncrease = this.permanentFireRateBoost(value || 20)
+                if (permFireRateIncrease === 0) {
+                    // 永久射速已达上限，转为分数奖励
+                    const bonusPoints = 200
+                    console.log(`🚀 永久射速已达上限！转为分数奖励: +${bonusPoints}`)
+                    return { enhanced: false, type: 'points', value: bonusPoints, reason: '永久射速已达上限' }
+                }
+                return { enhanced: true, actualValue: permFireRateIncrease }
                 
             case 'permanentSpeed':
-                this.permanentSpeedBoost(value || 30)
-                break
+                const permSpeedIncrease = this.permanentSpeedBoost(value || 30)
+                if (permSpeedIncrease === 0) {
+                    // 永久速度已达上限，转为分数奖励
+                    const bonusPoints = 150
+                    console.log(`💨 永久速度已达上限！转为分数奖励: +${bonusPoints}`)
+                    return { enhanced: false, type: 'points', value: bonusPoints, reason: '永久速度已达上限' }
+                }
+                return { enhanced: true, actualValue: permSpeedIncrease }
                 
             default:
                 console.warn(`⚠️ 未知道具类型: ${type}`)
+                return { enhanced: false, type: 'points', value: 50, reason: '未知道具类型' }
         }
     }
 

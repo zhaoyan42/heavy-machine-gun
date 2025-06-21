@@ -140,38 +140,143 @@ export default class CollisionManager {
         
         // 根据道具类型进行特殊处理
         let extraPoints = 0
+        let effectText = ''
+        let effectIcon = ''
+        
         switch (powerUp.type) {
             case 'extraPoints':
                 extraPoints = powerUp.value || 50
                 this.scene.addScore(extraPoints)
+                effectText = `+${extraPoints}分`
+                effectIcon = '💎'
                 break
+                
             case 'extraLife':
                 this.scene.lives = Math.min(this.scene.lives + 1, 5) // 最多5条命
                 this.scene.uiManager.updateLives(this.scene.lives)
                 console.log(`❤️ 获得额外生命！当前生命: ${this.scene.lives}`)
+                effectText = '+1生命'
+                effectIcon = '❤️'
                 break
-            case 'bomb':
+                  case 'bomb':
                 // 清除所有敌人
+                let bombScore = 0
                 this.scene.enemies.children.entries.forEach(enemy => {
+                    bombScore += enemy.scoreValue || 10
                     this.scene.addScore(enemy.scoreValue || 10)
                     this.scene.createDeathEffect(enemy.x, enemy.y)
                     this.destroyEnemy(enemy)
                 })
                 console.log('💣 炸弹激活！清除所有敌人')
+                effectText = bombScore > 0 ? `炸弹清屏 +${bombScore}分` : '炸弹激活'
+                effectIcon = '💣'
+                extraPoints = bombScore
                 break
+                
             default:
-                // 其他道具由Player处理
+                // 其他道具由Player处理，包含无法增强时转分数的逻辑
                 const result = this.scene.player.activatePowerUp(powerUp.type, powerUp.value)
+                
                 if (result && result.type === 'points') {
+                    // 道具无法增强，转为分数奖励
                     extraPoints = result.value
                     this.scene.addScore(extraPoints)
+                    effectText = `${result.reason || '已达上限'} +${extraPoints}分`
+                    effectIcon = this.getPowerUpIcon(powerUp.type)
+                } else if (result && result.type === 'heal') {
+                    // 处理生命恢复
+                    this.scene.lives = Math.min(this.scene.lives + 1, 5)
+                    this.scene.uiManager.updateLives(this.scene.lives)
+                    effectText = '+1生命'
+                    effectIcon = '❤️'
+                } else if (result && result.type === 'bomb') {
+                    // 处理炸弹效果（重复处理，但保持一致性）
+                    let bombScore = 0
+                    this.scene.enemies.children.entries.forEach(enemy => {
+                        bombScore += enemy.scoreValue || 10
+                        this.scene.addScore(enemy.scoreValue || 10)
+                        this.scene.createDeathEffect(enemy.x, enemy.y)
+                        this.destroyEnemy(enemy)
+                    })
+                    effectText = bombScore > 0 ? `炸弹清屏 +${bombScore}分` : '炸弹激活'
+                    effectIcon = '💣'
+                    extraPoints = bombScore
+                } else if (result && result.enhanced) {
+                    // 道具成功增强
+                    effectText = this.getEnhancementText(powerUp.type, result)
+                    effectIcon = this.getPowerUpIcon(powerUp.type)
+                } else {
+                    // 默认情况
+                    effectText = this.getDefaultEffectText(powerUp.type)
+                    effectIcon = this.getPowerUpIcon(powerUp.type)
                 }
                 break
         }
         
-        // 创建收集效果
-        this.scene.createCollectEffect(powerUp.x, powerUp.y)
+        // 创建增强的收集效果，显示实际效果
+        this.scene.createEnhancedCollectEffect(powerUp.x, powerUp.y, effectText, effectIcon)
         powerUp.destroy()
+    }
+    
+    /**
+     * 获取道具图标
+     */
+    getPowerUpIcon(type) {
+        const icons = {
+            'speed': '⚡',
+            'firerate': '🔥',
+            'multiShot': '🎯',
+            'multishot': '🎯',
+            'shield': '🛡️',
+            'permanentFireRate': '🚀',
+            'permanentSpeed': '💨',
+            'bomb': '💣',
+            'extraLife': '❤️',
+            'extraPoints': '💎'
+        }
+        return icons[type] || '⭐'
+    }
+    
+    /**
+     * 获取增强效果文本
+     */
+    getEnhancementText(type, result) {
+        switch (type) {
+            case 'speed':
+                return `速度+${result.actualValue}`
+            case 'firerate':
+                return `射速+${result.actualValue}ms`
+            case 'multiShot':
+            case 'multishot':
+                return result.extensionTime ? `多重射击+${result.extensionTime/1000}秒` : '多重射击激活'
+            case 'shield':
+                return result.extensionTime ? `护盾+${result.extensionTime/1000}秒` : '护盾激活'
+            case 'permanentFireRate':
+                return `永久射速+${result.actualValue}ms`
+            case 'permanentSpeed':
+                return `永久速度+${result.actualValue}`
+            default:
+                return this.getDefaultEffectText(type)
+        }
+    }
+    
+    /**
+     * 获取默认效果文本
+     */
+    getDefaultEffectText(type) {
+        const texts = {
+            'speed': '速度提升',
+            'firerate': '射速提升',
+            'multiShot': '多重射击',
+            'multishot': '多重射击',
+            'shield': '护盾激活',
+            'permanentFireRate': '永久射速',
+            'permanentSpeed': '永久速度',
+            'bomb': '炸弹',
+            'extraLife': '额外生命',
+            'extraPoints': '额外分数'
+        }
+        return texts[type] || '道具效果'
     }
       /**
      * 销毁敌人及其相关资源

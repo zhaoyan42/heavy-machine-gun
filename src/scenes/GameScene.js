@@ -179,8 +179,7 @@ export default class GameScene extends Phaser.Scene {
         this.textures.addCanvas(key, canvas)
     }    /**
      * 创建道具emoji纹理
-     */
-    createPowerUpTextures() {
+     */    createPowerUpTextures() {
         // 多重射击道具 - 枪emoji
         this.createEmojiTexture('🔫', 'powerup-multiShot', 30, 30)
 
@@ -201,6 +200,18 @@ export default class GameScene extends Phaser.Scene {
           
         // 炸弹道具 - 炸弹emoji
         this.createEmojiTexture('💣', 'powerup-bomb', 30, 30)
+        
+        // 临时速度提升道具 - 闪电emoji
+        this.createEmojiTexture('⚡', 'powerup-speed', 30, 30)
+        
+        // 临时射速提升道具 - 火emoji
+        this.createEmojiTexture('🔥', 'powerup-firerate', 30, 30)
+        
+        // 多重射击道具的别名（小写）
+        this.createEmojiTexture('🎯', 'powerup-multishot', 30, 30)
+        
+        // 通用加分道具
+        this.createEmojiTexture('💰', 'powerup-points', 30, 30)
     }/**
      * 处理触屏/鼠标输入
      */
@@ -602,10 +613,69 @@ export default class GameScene extends Phaser.Scene {
 
     createDeathEffect(x, y) {
         this.effectsManager.createDeathEffect(x, y)
+    }    createCollectEffect(x, y) {
+        this.effectsManager.createCollectEffect(x, y)
     }
 
-    createCollectEffect(x, y) {
-        this.effectsManager.createCollectEffect(x, y)
+    /**
+     * 创建增强的道具收集效果，显示实际效果和图标
+     */
+    createEnhancedCollectEffect(x, y, effectText, effectIcon) {
+        // 创建收集光环效果
+        const ring = this.add.circle(x, y, 5, 0xffffff)
+        ring.setStrokeStyle(2, 0xffff00)
+        
+        // 扩展动画
+        this.tweens.add({
+            targets: ring,
+            scaleX: 3,
+            scaleY: 3,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                ring.destroy()
+            }
+        })
+        
+        // 创建图标和效果文本
+        const iconText = this.add.text(x, y - 10, effectIcon, {
+            fontSize: '20px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 1
+        }).setOrigin(0.5)
+        
+        const effectTextObj = this.add.text(x, y + 15, effectText, {
+            fontSize: '12px',
+            fill: '#ffff00',
+            stroke: '#000000',
+            strokeThickness: 1,
+            fontWeight: 'bold'
+        }).setOrigin(0.5)
+        
+        // 向上飘动的动画
+        this.tweens.add({
+            targets: [iconText, effectTextObj],
+            y: y - 60,
+            alpha: 0,
+            duration: 1200,
+            ease: 'Power2',
+            onComplete: () => {
+                iconText.destroy()
+                effectTextObj.destroy()
+            }
+        })
+        
+        // 图标放大效果
+        this.tweens.add({
+            targets: iconText,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            duration: 200,
+            yoyo: true,
+            ease: 'Back.easeOut'
+        })
     }
 
     /**
