@@ -200,6 +200,30 @@ export default class GameScene extends Phaser.Scene {
             .fillEllipse(15, 15, 20, 15)
             .generateTexture('powerup-extraLife', 30, 30)
         extraLifeGraphics.destroy() // 生成纹理后销毁Graphics对象
+          // 永久射速增强道具 - 金色星形
+        const permanentFireRateGraphics = this.add.graphics()
+            .fillStyle(0xffd700)
+            .fillTriangle(15, 5, 10, 20, 20, 20)
+            .fillTriangle(15, 25, 10, 10, 20, 10)
+            .generateTexture('powerup-permanentFireRate', 30, 30)
+        permanentFireRateGraphics.destroy() // 生成纹理后销毁Graphics对象
+        
+        // 永久移动速度增强道具 - 绿色闪电形状
+        const permanentSpeedGraphics = this.add.graphics()
+            .fillStyle(0x32cd32)
+            .fillTriangle(8, 5, 15, 5, 12, 15)
+            .fillTriangle(12, 15, 22, 15, 15, 25)
+            .fillRect(10, 12, 8, 6)
+            .generateTexture('powerup-permanentSpeed', 30, 30)
+        permanentSpeedGraphics.destroy() // 生成纹理后销毁Graphics对象
+          // 炸弹道具 - 红橙色圆形
+        const bombGraphics = this.add.graphics()
+            .fillStyle(0xff4500)
+            .fillCircle(15, 15, 12)
+            .fillStyle(0xff0000)
+            .fillCircle(15, 15, 8)
+            .generateTexture('powerup-bomb', 30, 30)
+        bombGraphics.destroy() // 生成纹理后销毁Graphics对象
     }/**
      * 处理触屏/鼠标输入
      */

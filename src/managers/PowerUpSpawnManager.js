@@ -1,6 +1,7 @@
 /**
  * 道具生成管理器
  * 负责管理道具的生成逻辑和生成模式
+ * 包含新的动态权重系统和永久增强道具支持
  */
 
 import PowerUp from '../entities/PowerUp.js'
@@ -10,10 +11,14 @@ export default class PowerUpSpawnManager {
     constructor(scene) {
         this.scene = scene
         this.spawnTimer = null
-        this.powerUpTypes = ['multiShot', 'shield', 'extraPoints', 'extraLife']
+        // 新的道具类型数组 - 包含永久增强道具
+        this.powerUpTypes = [
+            'multiShot', 'shield', 'extraPoints', 'extraLife', 
+            'bomb', 'permanentFireRate', 'permanentSpeed'
+        ]
         
         this.startSpawning()
-    }    /**
+    }/**
      * 开始生成道具
      */
     startSpawning() {
@@ -165,15 +170,13 @@ export default class PowerUpSpawnManager {
         this.scene.events.emit('powerUpSpawned', type, x, y, value, this.scene.level)
         
         console.log(`✨ 生成道具: ${type} 位置:(${x}, ${y}) 值:${value} 等级:${this.scene.level}`)
-    }
-
-    /**
-     * 智能选择道具类型（基于当前游戏状态）
+    }    /**
+     * 智能选择道具类型（基于新的权重系统）
      */
     selectPowerUpType() {
-        const weights = this.calculatePowerUpWeights()
+        const weights = this.calculateDynamicWeights()
         return this.weightedRandomSelect(weights)
-    }    /**
+    }/**
      * 计算不同道具的权重（基于游戏状态和难度）
      */
     calculatePowerUpWeights() {
@@ -277,6 +280,16 @@ export default class PowerUpSpawnManager {
                 return POWERUP_CONFIG.EXTRA_POINTS_VALUE + pointsBonus
             case 'extraLife':
                 return POWERUP_CONFIG.EXTRA_LIFE_VALUE
+            case 'permanentFireRate':
+                // 根据等级调整永久增强值
+                const fireRateBoost = POWERUP_CONFIG.FIRE_RATE_BOOST + Math.floor(level / 3) * 5
+                return Math.min(fireRateBoost, 50) // 最大增强50ms
+            case 'permanentSpeed':
+                // 根据等级调整永久增强值
+                const speedBoost = POWERUP_CONFIG.SPEED_BOOST + Math.floor(level / 3) * 10
+                return Math.min(speedBoost, 80) // 最大增强80速度
+            case 'bomb':
+                return 1 // 炸弹效果
             default:
                 return 0
         }
@@ -339,5 +352,93 @@ export default class PowerUpSpawnManager {
      */
     destroy() {
         this.stopSpawning()
+    }
+
+    /**
+     * 计算动态权重（基于道具影响力和游戏状态）
+     */
+    calculateDynamicWeights() {
+        const level = this.scene.level || 1
+        const lives = this.scene.lives || 3
+        
+        // 从配置中获取基础权重
+        const baseWeights = { ...POWERUP_CONFIG.POWERUP_WEIGHTS }
+        
+        // 计算难度系数 (0到1之间)
+        const difficultyFactor = Math.min(1.0, (level - 1) / 15) // 15级达到最大难度
+        
+        // 应用难度调整权重
+        const adjustedWeights = {}
+        for (const [powerUpType, baseWeight] of Object.entries(baseWeights)) {
+            const modifier = POWERUP_CONFIG.DIFFICULTY_WEIGHT_MODIFIERS[powerUpType]
+            if (modifier) {
+                // 根据难度线性插值权重调整
+                const multiplier = modifier.min + (modifier.max - modifier.min) * difficultyFactor
+                adjustedWeights[powerUpType] = baseWeight * multiplier
+            } else {
+                adjustedWeights[powerUpType] = baseWeight
+            }
+        }
+        
+        // 应用游戏状态调整
+        this.applyGameStateAdjustments(adjustedWeights, level, lives)
+        
+        console.log(`🎲 动态权重计算 - 等级:${level} 难度系数:${difficultyFactor.toFixed(2)}`, adjustedWeights)
+        
+        return adjustedWeights
+    }
+    
+    /**
+     * 根据游戏状态调整权重
+     */
+    applyGameStateAdjustments(weights, level, lives) {
+        // 生命值紧急调整
+        if (lives <= 1) {
+            weights.extraLife *= 4.0    // 最后一条命时极大提升生命道具
+            weights.shield *= 3.0       // 大幅提升护盾道具
+            if (weights.bomb) weights.bomb *= 2.0         // 提升炸弹道具
+        } else if (lives <= 2) {
+            weights.extraLife *= 2.5
+            weights.shield *= 2.0
+            if (weights.bomb) weights.bomb *= 1.5
+        }
+        
+        // 根据玩家当前状态调整
+        if (this.scene.player.isShieldActive()) {
+            weights.shield *= 0.2       // 已有护盾时大幅减少
+            if (weights.permanentFireRate) weights.permanentFireRate *= 1.8 // 更倾向于攻击增强
+            if (weights.permanentSpeed) weights.permanentSpeed *= 1.8
+        }
+        
+        if (this.scene.player.isMultiShotActive()) {
+            weights.multiShot *= 0.3    // 已有多重射击时减少
+            weights.shield *= 1.5       // 更倾向于防御
+            if (weights.permanentSpeed) weights.permanentSpeed *= 1.5 // 提升移动增强
+        }
+        
+        // 高等级时调整永久增强道具概率
+        if (level >= 5) {
+            if (weights.permanentFireRate) weights.permanentFireRate *= 1.3
+            if (weights.permanentSpeed) weights.permanentSpeed *= 1.3
+            weights.extraPoints *= 0.6  // 减少分数道具
+        }
+        
+        // 超高等级时的特殊调整
+        if (level >= 10) {
+            if (weights.permanentFireRate) weights.permanentFireRate *= 1.5
+            if (weights.permanentSpeed) weights.permanentSpeed *= 1.5
+            if (weights.bomb) weights.bomb *= 1.8
+            weights.extraPoints *= 0.4
+        }
+        
+        // 根据屏幕上道具数量调整
+        const activePowerUpsCount = this.scene.powerUps.children.entries.length
+        if (activePowerUpsCount >= 3) {
+            // 如果屏幕上道具太多，偏向重要道具
+            weights.extraLife *= 2.0
+            if (weights.permanentFireRate) weights.permanentFireRate *= 1.5
+            if (weights.permanentSpeed) weights.permanentSpeed *= 1.5
+            weights.extraPoints *= 0.3
+        }
     }
 }

@@ -134,14 +134,61 @@ export default class CollisionManager {
      */
     handlePlayerPowerUpCollision(powerUp) {
         console.log(`✨ 收集道具: ${powerUp.type}`)
-        this.scene.player.activatePowerUp(powerUp.type, powerUp.value)
+        
+        // 根据道具类型进行特殊处理
+        let extraPoints = 0
+        switch (powerUp.type) {
+            case 'extraPoints':
+                extraPoints = powerUp.value || 50
+                this.scene.addScore(extraPoints)
+                break
+            case 'extraLife':
+                this.scene.lives = Math.min(this.scene.lives + 1, 5) // 最多5条命
+                this.scene.uiManager.updateLives(this.scene.lives)
+                console.log(`❤️ 获得额外生命！当前生命: ${this.scene.lives}`)
+                break
+            case 'bomb':
+                // 清除所有敌人
+                this.scene.enemies.children.entries.forEach(enemy => {
+                    this.scene.addScore(enemy.scoreValue || 10)
+                    this.scene.createDeathEffect(enemy.x, enemy.y)
+                    this.destroyEnemy(enemy)
+                })
+                console.log('💣 炸弹激活！清除所有敌人')
+                break
+            default:
+                // 其他道具由Player处理
+                const result = this.scene.player.activatePowerUp(powerUp.type, powerUp.value)
+                if (result && result.type === 'points') {
+                    extraPoints = result.value
+                    this.scene.addScore(extraPoints)
+                }
+                break
+        }
         
         // 显示道具提示
-        this.scene.uiManager.showPowerUpNotification(powerUp.type, 2000)
+        const powerUpName = this.getPowerUpDisplayName(powerUp.type)
+        this.scene.uiManager.showPowerUpNotification(powerUpName, 2000)
         
         // 创建收集效果
         this.scene.createCollectEffect(powerUp.x, powerUp.y)
         powerUp.destroy()
+    }
+    
+    /**
+     * 获取道具显示名称
+     */
+    getPowerUpDisplayName(type) {
+        const names = {
+            'multiShot': '五重散射',
+            'shield': '护盾',
+            'extraPoints': '额外分数',
+            'extraLife': '额外生命',
+            'bomb': '清屏炸弹',
+            'permanentFireRate': '永久射速增强',
+            'permanentSpeed': '永久移动速度增强'
+        }
+        return names[type] || type
     }
 
     /**

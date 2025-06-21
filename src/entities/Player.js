@@ -92,9 +92,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
      */
     moveTo(x, y) {
         this.setTargetX(x)
-    }
-
-    // 道具效果方法
+    }    // 道具效果方法
     increaseFireRate() {
         this.fireRate = Math.max(50, this.fireRate - 30)
         console.log(`🔥 射击速度提升！当前间隔: ${this.fireRate}ms`)
@@ -103,7 +101,22 @@ export default class Player extends Phaser.GameObjects.Sprite {
     increaseSpeed() {
         this.speed = Math.min(500, this.speed + 50)
         console.log(`⚡ 移动速度提升！当前速度: ${this.speed}`)
-    }    // 散射子弹效果
+    }
+    
+    // 永久增强方法
+    permanentFireRateBoost(value) {
+        const oldFireRate = this.fireRate
+        this.fireRate = Math.max(50, this.fireRate - value) // 最小射击间隔50ms
+        const actualIncrease = oldFireRate - this.fireRate
+        console.log(`🔥⭐ 永久射速增强！减少${actualIncrease}ms射击间隔 (${oldFireRate}ms → ${this.fireRate}ms)`)
+    }
+    
+    permanentSpeedBoost(value) {
+        const oldSpeed = this.speed
+        this.speed = Math.min(600, this.speed + value) // 最大移动速度600
+        const actualIncrease = this.speed - oldSpeed
+        console.log(`⚡⭐ 永久移动速度增强！增加${actualIncrease}速度 (${oldSpeed} → ${this.speed})`)
+    }// 散射子弹效果
     enableMultiShot() {
         if (!this.multiShot) {
             // 只有当前没有散射效果时才激活
@@ -161,9 +174,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
             console.log(`🛡️ 护盾效果结束`)
         }
         return this.shieldActive
-    }
-
-    /**
+    }    /**
      * 激活道具效果
      * @param {string} type 道具类型
      * @param {number} value 道具数值（可选）
@@ -201,6 +212,14 @@ export default class Player extends Phaser.GameObjects.Sprite {
                 // 分数相关的道具效果由GameScene处理
                 console.log(`💰 获得额外分数: ${value || 100}`)
                 return { type: 'points', value: value || 100 }
+                
+            case 'permanentFireRate':
+                this.permanentFireRateBoost(value || 20)
+                break
+                
+            case 'permanentSpeed':
+                this.permanentSpeedBoost(value || 30)
+                break
                 
             default:
                 console.warn(`⚠️ 未知道具类型: ${type}`)
