@@ -1,0 +1,17 @@
+{
+  "name": "heavy-machine-gun-equivalence-class-tests",
+  "scripts": {
+    "test:all": "npx playwright test tests/e2e/ --timeout=120000",
+    "test:core": "npx playwright test tests/e2e/core-functionality.spec.ts --timeout=60000",
+    "test:ui": "npx playwright test tests/e2e/ui-ux.spec.ts --timeout=60000",
+    "test:powerup": "npx playwright test tests/e2e/powerup-system.spec.ts --timeout=120000",
+    "test:performance": "npx playwright test tests/e2e/performance-stability.spec.ts --timeout=300000",
+    "test:compatibility": "npx playwright test tests/e2e/compatibility.spec.ts --timeout=120000",
+    "test:integration": "npx playwright test tests/e2e/integration.spec.ts --timeout=180000",
+    "test:quick": "npx playwright test tests/e2e/core-functionality.spec.ts tests/e2e/ui-ux.spec.ts --timeout=60000 --project=chromium",
+    "test:smoke": "npx playwright test tests/e2e/core-functionality.spec.ts --grep='游戏初始化等价类验证' --timeout=30000",
+    "test:chrome": "npx playwright test tests/e2e/ --project=chromium --timeout=120000",
+    "test:report": "npx playwright test tests/e2e/ --timeout=120000 --reporter=html"
+  },
+  "description": "基于等价类划分的高效测试套件"
+}
