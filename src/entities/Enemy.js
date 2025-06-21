@@ -17,12 +17,13 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {    constructor
         this.points = 10
         this.scoreValue = 10  // 分数值属性
         
-        // 设置初始速度（向下移动）
-        this.setVelocityY(this.speed)
+        // 侧边生成相关属性
+        this.isFromSide = false
+        this.sideSpawnTargetX = 0
+        this.hasReachedTarget = false
         
-        // 随机添加一些水平移动
-        const horizontalSpeed = Phaser.Math.Between(-50, 50)
-        this.setVelocityX(horizontalSpeed)
+        // 设置初始移动
+        this.setupInitialMovement(x, y)
         
         // 设置碰撞体积
         this.setSize(30, 30)
@@ -33,13 +34,44 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {    constructor
         console.log('👾 敌人生成')
     }
     
-    update() {
+    /**
+     * 设置初始移动模式
+     */
+    setupInitialMovement(x, y) {
+        if (this.isFromSide && this.sideSpawnTargetX > 0) {
+            // 侧边生成的敌人先横向移动到目标位置
+            const directionX = this.sideSpawnTargetX > x ? 1 : -1
+            this.setVelocityX(this.speed * 0.8 * directionX)
+            this.setVelocityY(this.speed * 0.3) // 缓慢下移
+        } else {
+            // 普通从顶部生成的敌人
+            this.setVelocityY(this.speed)
+            
+            // 随机添加一些水平移动
+            const horizontalSpeed = Phaser.Math.Between(-50, 50)
+            this.setVelocityX(horizontalSpeed)
+        }
+    }
+      update() {
         // 旋转效果
         this.rotation += this.rotationSpeed * 0.01
         
-        // 边界检测 - 如果触碰左右边界则反弹
-        if (this.x <= 0 || this.x >= this.scene.cameras.main.width) {
-            this.setVelocityX(-this.body.velocity.x)
+        // 侧边生成敌人的特殊移动逻辑
+        if (this.isFromSide && !this.hasReachedTarget) {
+            const targetDistance = Math.abs(this.x - this.sideSpawnTargetX)
+            if (targetDistance < 20) {
+                // 到达目标位置，切换为向下移动
+                this.hasReachedTarget = true
+                this.setVelocityX(Phaser.Math.Between(-30, 30)) // 轻微水平移动
+                this.setVelocityY(this.speed) // 正常向下速度
+            }
+        }
+        
+        // 边界检测 - 如果触碰左右边界则反弹（只对非侧边生成的敌人）
+        if (!this.isFromSide || this.hasReachedTarget) {
+            if (this.x <= 0 || this.x >= this.scene.cameras.main.width) {
+                this.setVelocityX(-this.body.velocity.x)
+            }
         }
     }
     
