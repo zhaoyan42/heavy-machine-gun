@@ -166,32 +166,11 @@ export default class CollisionManager {
                 break
         }
         
-        // 显示道具提示
-        const powerUpName = this.getPowerUpDisplayName(powerUp.type)
-        this.scene.uiManager.showPowerUpNotification(powerUpName, 2000)
-        
         // 创建收集效果
         this.scene.createCollectEffect(powerUp.x, powerUp.y)
         powerUp.destroy()
     }
-    
-    /**
-     * 获取道具显示名称
-     */
-    getPowerUpDisplayName(type) {
-        const names = {
-            'multiShot': '五重散射',
-            'shield': '护盾',
-            'extraPoints': '额外分数',
-            'extraLife': '额外生命',
-            'bomb': '清屏炸弹',
-            'permanentFireRate': '永久射速增强',
-            'permanentSpeed': '永久移动速度增强'
-        }
-        return names[type] || type
-    }
-
-    /**
+      /**
      * 销毁敌人及其相关资源
      */
     destroyEnemy(enemy) {

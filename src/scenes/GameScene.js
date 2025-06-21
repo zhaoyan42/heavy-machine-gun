@@ -140,90 +140,67 @@ export default class GameScene extends Phaser.Scene {
     startGameLoop() {
         // 注释：玩家射击现在由Player.js的handleShooting()方法处理
         // 移除了重复的定时器射击逻辑，避免双重射击问题
-    }/**
-     * 创建简单图形作为临时资源
+    }    /**
+     * 创建emoji图标纹理
      */
     createColorGraphics() {
-        // 玩家 - 蓝色三角形
-        const playerGraphics = this.add.graphics()
-            .fillStyle(0x0088ff)
-            .fillTriangle(15, 0, 0, 30, 30, 30)
-            .generateTexture('player', 30, 30)
-        playerGraphics.destroy() // 生成纹理后销毁Graphics对象
-
-        // 敌人 - 红色矩形
-        const enemyGraphics = this.add.graphics()
-            .fillStyle(0xff4444)
-            .fillRect(0, 0, 25, 25)
-            .generateTexture('enemy', 25, 25)
-        enemyGraphics.destroy() // 生成纹理后销毁Graphics对象
-
-        // 子弹 - 黄色圆形
-        const bulletGraphics = this.add.graphics()
-            .fillStyle(0xffff44)
-            .fillCircle(3, 3, 3)
-            .generateTexture('bullet', 6, 6)
-        bulletGraphics.destroy() // 生成纹理后销毁Graphics对象
+        // 玩家 - 飞机emoji
+        this.createEmojiTexture('🚁', 'player', 30, 30)
+        
+        // 敌人 - 外星人emoji  
+        this.createEmojiTexture('👾', 'enemy', 25, 25)
+        
+        // 子弹 - 闪电emoji
+        this.createEmojiTexture('⚡', 'bullet', 12, 12)
 
         // 道具纹理
         this.createPowerUpTextures()
+    }
+
+    /**
+     * 创建emoji纹理的通用方法
+     */
+    createEmojiTexture(emoji, key, width, height) {
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        
+        // 设置字体大小（根据尺寸调整）
+        const fontSize = Math.min(width, height) * 0.8
+        ctx.font = `${fontSize}px Arial`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        
+        // 绘制emoji
+        ctx.fillText(emoji, width / 2, height / 2)
+        
+        // 将canvas转换为Phaser纹理
+        this.textures.addCanvas(key, canvas)
     }    /**
-     * 创建道具纹理
+     * 创建道具emoji纹理
      */
     createPowerUpTextures() {
-        // 多重射击道具 - 橙色菱形
-        const multiShotGraphics = this.add.graphics()
-            .fillStyle(0xff8800)
-            .fillRect(10, 10, 10, 10)
-            .fillTriangle(15, 5, 25, 15, 15, 25)
-            .fillTriangle(15, 25, 5, 15, 15, 5)
-            .generateTexture('powerup-multiShot', 30, 30)
-        multiShotGraphics.destroy() // 生成纹理后销毁Graphics对象
+        // 多重射击道具 - 枪emoji
+        this.createEmojiTexture('🔫', 'powerup-multiShot', 30, 30)
 
-        // 护盾道具 - 青色圆形
-        const shieldGraphics = this.add.graphics()
-            .fillStyle(0x00ffff)
-            .fillCircle(15, 15, 15)
-            .generateTexture('powerup-shield', 30, 30)
-        shieldGraphics.destroy() // 生成纹理后销毁Graphics对象
+        // 护盾道具 - 盾牌emoji
+        this.createEmojiTexture('🛡️', 'powerup-shield', 30, 30)
 
-        // 加分道具 - 金色钻石
-        const extraPointsGraphics = this.add.graphics()
-            .fillStyle(0xffdd00)
-            .fillRect(5, 5, 20, 20)
-            .generateTexture('powerup-extraPoints', 30, 30)
-        extraPointsGraphics.destroy() // 生成纹理后销毁Graphics对象
+        // 加分道具 - 钻石emoji
+        this.createEmojiTexture('💎', 'powerup-extraPoints', 30, 30)
 
-        // 生命道具 - 红色心形
-        const extraLifeGraphics = this.add.graphics()
-            .fillStyle(0xff0066)
-            .fillEllipse(15, 15, 20, 15)
-            .generateTexture('powerup-extraLife', 30, 30)
-        extraLifeGraphics.destroy() // 生成纹理后销毁Graphics对象
-          // 永久射速增强道具 - 金色星形
-        const permanentFireRateGraphics = this.add.graphics()
-            .fillStyle(0xffd700)
-            .fillTriangle(15, 5, 10, 20, 20, 20)
-            .fillTriangle(15, 25, 10, 10, 20, 10)
-            .generateTexture('powerup-permanentFireRate', 30, 30)
-        permanentFireRateGraphics.destroy() // 生成纹理后销毁Graphics对象
+        // 生命道具 - 红心emoji
+        this.createEmojiTexture('❤️', 'powerup-extraLife', 30, 30)
+
+        // 永久射速增强道具 - 火箭emoji
+        this.createEmojiTexture('🚀', 'powerup-permanentFireRate', 30, 30)
         
-        // 永久移动速度增强道具 - 绿色闪电形状
-        const permanentSpeedGraphics = this.add.graphics()
-            .fillStyle(0x32cd32)
-            .fillTriangle(8, 5, 15, 5, 12, 15)
-            .fillTriangle(12, 15, 22, 15, 15, 25)
-            .fillRect(10, 12, 8, 6)
-            .generateTexture('powerup-permanentSpeed', 30, 30)
-        permanentSpeedGraphics.destroy() // 生成纹理后销毁Graphics对象
-          // 炸弹道具 - 红橙色圆形
-        const bombGraphics = this.add.graphics()
-            .fillStyle(0xff4500)
-            .fillCircle(15, 15, 12)
-            .fillStyle(0xff0000)
-            .fillCircle(15, 15, 8)
-            .generateTexture('powerup-bomb', 30, 30)
-        bombGraphics.destroy() // 生成纹理后销毁Graphics对象
+        // 永久移动速度增强道具 - 风emoji
+        this.createEmojiTexture('💨', 'powerup-permanentSpeed', 30, 30)
+          
+        // 炸弹道具 - 炸弹emoji
+        this.createEmojiTexture('💣', 'powerup-bomb', 30, 30)
     }/**
      * 处理触屏/鼠标输入
      */
