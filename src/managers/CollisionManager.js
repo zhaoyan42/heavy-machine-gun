@@ -129,14 +129,15 @@ export default class CollisionManager {
                 this.scene.player.clearTint()
             }
         })
-    }
-
-    /**
+    }    /**
      * 处理玩家收集道具
      */
     handlePlayerPowerUpCollision(powerUp) {
         console.log(`✨ 收集道具: ${powerUp.type}`)
         this.scene.player.activatePowerUp(powerUp.type, powerUp.value)
+        
+        // 显示道具提示
+        this.scene.uiManager.showPowerUpNotification(powerUp.type, 2000)
         
         // 创建收集效果
         this.scene.createCollectEffect(powerUp.x, powerUp.y)

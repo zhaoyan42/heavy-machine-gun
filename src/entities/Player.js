@@ -162,4 +162,48 @@ export default class Player extends Phaser.GameObjects.Sprite {
         }
         return this.shieldActive
     }
+
+    /**
+     * 激活道具效果
+     * @param {string} type 道具类型
+     * @param {number} value 道具数值（可选）
+     */
+    activatePowerUp(type, value = null) {
+        console.log(`✨ 激活道具: ${type}`, value ? `值: ${value}` : '')
+        
+        switch (type) {
+            case 'speed':
+                this.increaseSpeed()
+                break
+                
+            case 'firerate':
+                this.increaseFireRate()
+                break
+                
+            case 'multishot':
+            case 'multiShot':
+                this.enableMultiShot()
+                break
+                
+            case 'shield':
+                this.activateShield()
+                break
+                
+            case 'bomb':
+                return this.activateBomb()
+                
+            case 'heal':
+            case 'extraLife':
+                return this.restoreLife()
+                
+            case 'points':
+            case 'extraPoints':
+                // 分数相关的道具效果由GameScene处理
+                console.log(`💰 获得额外分数: ${value || 100}`)
+                return { type: 'points', value: value || 100 }
+                
+            default:
+                console.warn(`⚠️ 未知道具类型: ${type}`)
+        }
+    }
 }

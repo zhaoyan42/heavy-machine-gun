@@ -32,8 +32,8 @@ export const ENEMY_CONFIG = {
 
 // 道具配置
 export const POWERUP_CONFIG = {
-    SPAWN_CHANCE: 0.1,      // 生成概率
-    SPAWN_DELAY: 15000,     // 生成间隔(毫秒)
+    SPAWN_CHANCE: 0.25,     // 生成概率 (从0.1提升到0.25，增加150%)
+    SPAWN_DELAY: 8000,      // 生成间隔(毫秒) (从15秒减少到8秒)
     FALL_SPEED: 150,        // 下落速度
     
     // 各种道具效果持续时间
